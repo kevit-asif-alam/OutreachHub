@@ -19,14 +19,31 @@ export class AuthService {
   ) {}
 
   async validateAdmin(email: string, password: string) {
-    const user = await this.userModel.findOne({ email });
+    const user = await this.userModel.findOne({ email: email.toLowerCase() });
     if (!user || !user.isAdmin) throw new UnauthorizedException('Invalid credentials');
 
-    const valid = await bcrypt.compare(password, user.passwordHash);
+    const valid = user.passwordHash && await bcrypt.compare(password, user.passwordHash);
     if (!valid) throw new UnauthorizedException('Invalid credentials');
 
     return user;
   }
+
+  private async signAndStore(user: UserDocument, portal: 'ADMIN' | 'APP') {
+  const jti = uuidv4();
+  const payload = {
+    sub: user._id.toString(),
+    email: user.email,
+    isAdmin: !!user.isAdmin,
+    portal,     // NEW: enforce which portal this token is for
+    jti,
+  };
+  const expiresIn = '1h';
+  const token = this.jwtService.sign(payload, { expiresIn });
+  const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
+
+  await this.tokenModel.create({ userId: user._id, jti, expiresAt });
+  return { accessToken: token, expiresIn, jti };
+}
 
   async login(user: UserDocument) {
     const jti = uuidv4();
@@ -38,7 +55,7 @@ export class AuthService {
 
     await this.tokenModel.create({ userId: user._id, jti, expiresAt });
 
-    return { accessToken: token, expiresIn, jti };
+    return this.signAndStore(user, 'ADMIN');;
   }
 
   async logout(jti: string) {

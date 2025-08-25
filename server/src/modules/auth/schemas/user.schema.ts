@@ -11,7 +11,7 @@ export class User {
   @Prop({ required: true })
   passwordHash: string;
 
-  @Prop({ default: true })
+  @Prop({ default: false })
   isAdmin: boolean;
 }
 
