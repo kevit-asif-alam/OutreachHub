@@ -5,6 +5,7 @@ import { AdminAuthController } from './admin-auth.controller';
 import { AuthService } from './auth.service';
 import { User, UserSchema } from './schemas/user.schema';
 import { Token, TokenSchema } from './schemas/token.schema';
+import { AppAuthController } from './app-auth.controller';
 
 @Module({
   imports: [
@@ -17,7 +18,7 @@ import { Token, TokenSchema } from './schemas/token.schema';
       { name: Token.name, schema: TokenSchema },
     ]),
   ],
-  controllers: [AdminAuthController],
+  controllers: [AdminAuthController, AppAuthController],
   providers: [AuthService],
   exports: [AuthService],
 })
