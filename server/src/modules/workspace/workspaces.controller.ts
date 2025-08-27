@@ -1,5 +1,18 @@
-// modules/workspaces/workspaces.controller.ts
-import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import { 
+  Body, 
+  Controller, 
+  Delete, 
+  Get, 
+  Param, 
+  Patch, 
+  Post, 
+  UseGuards, 
+  Req, 
+  BadRequestException, 
+  ForbiddenException,
+  UsePipes,
+  ValidationPipe
+} from '@nestjs/common';
 import { WorkspacesService } from './workspaces.service';
 import { CreateWorkspaceDto } from './dto/create-workspace.dto';
 import { UpdateWorkspaceDto } from './dto/update-workspace.dto';
@@ -8,11 +21,16 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { AdminGuard } from '../../common/guards/admin.guard';
 import { WorkspaceGuard, WorkspaceRoles } from '../../common/guards/workspace.guard';
 import { UserRole } from '../auth/schemas/user.schema';
+import { JwtService } from '@nestjs/jwt';
 
-@UseGuards(JwtAuthGuard, AdminGuard)
 @Controller('admin/workspaces')
+@UseGuards(JwtAuthGuard, AdminGuard)
+@UsePipes(new ValidationPipe({ transform: true }))
 export class WorkspacesController {
-  constructor(private readonly service: WorkspacesService) {}
+  constructor(
+    private readonly service: WorkspacesService,
+    private readonly jwtService: JwtService
+  ) {}
 
   @Post()
   @UseGuards(JwtAuthGuard, AdminGuard)
@@ -81,13 +99,13 @@ export class WorkspacesController {
   async removeUser(
     @Param('id') workspaceId: string,
     @Param('userId') userId: string,
-    @Req() req
+    @Req() req: any
   ) {
     // Prevent users from removing themselves
-    if (userId === req.user.userId) {
+    if (userId === req.user.sub) {
       throw new ForbiddenException('Cannot remove yourself from workspace');
     }
     
-    return this.service.removeUser(workspaceId, userId);
+    return this.service.revokeWorkspaceAccess(userId, workspaceId);
   }
 }

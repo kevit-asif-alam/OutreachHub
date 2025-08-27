@@ -72,5 +72,4 @@ export class JwtStrategy extends PassportStrategy(Strategy, JWT_STRATEGY_NAME) {
       jti: payload.jti,
     };
   }
-  }
 }

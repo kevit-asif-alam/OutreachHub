@@ -9,6 +9,7 @@ export enum UserRole {
 export interface WorkspaceAccess {
   workspaceId: MongooseSchema.Types.ObjectId;
   role: UserRole;
+  joinedAt: Date;
 }
 
 export type UserDocument = User & Document;
@@ -28,6 +29,7 @@ export class User {
     type: [{
       workspaceId: { type: MongooseSchema.Types.ObjectId, ref: 'Workspace' },
       role: { type: String, enum: Object.values(UserRole), default: UserRole.VIEWER },
+      joinedAt: { type: Date, default: Date.now },
     }],
     default: [],
     _id: false,

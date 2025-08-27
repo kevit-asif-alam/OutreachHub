@@ -79,10 +79,10 @@ export class AuthService {
     };
   }
 
-  async login(user: UserDocument, portal: 'ADMIN' | 'APP', workspaceId?: string) {
+  async login(user: UserDocument | any, portal: 'ADMIN' | 'APP', workspaceId?: string) {
     // For app login, verify workspace access if workspaceId is provided
     if (portal === 'APP' && workspaceId) {
-      const hasAccess = user.workspaces.some(
+      const hasAccess = user.workspaces?.some(
         (ws: WorkspaceAccess) => ws.workspaceId.toString() === workspaceId
       );
       
@@ -92,8 +92,15 @@ export class AuthService {
     } else if (portal === 'ADMIN' && !user.isAdmin) {
       throw new UnauthorizedException('Admin access required');
     }
-
-    return this.signAndStore(user, portal, workspaceId);
+    
+    // Ensure we have a proper UserDocument
+    const userDoc = user._id ? user : await this.userModel.findById(user.id || user._id);
+    
+    if (!userDoc) {
+      throw new UnauthorizedException('User not found');
+    }
+    
+    return this.signAndStore(userDoc, portal, workspaceId);
   }
 
   async register(email: string, password: string, isAdmin: boolean = false) {
@@ -130,8 +137,9 @@ export class AuthService {
     }
 
     user.workspaces.push({
-      workspaceId: new Types.ObjectId(workspaceId),
+      workspaceId: new Types.ObjectId(workspaceId) as any, // Cast to any to avoid type issues
       role,
+      joinedAt: new Date()
     });
 
     await user.save();
@@ -160,25 +168,8 @@ export class AuthService {
     return { success: true };
   }
 
+  async loginAsAdmin(user: UserDocument) {
     return this.signAndStore(user, 'ADMIN');
-  }
-
-  async logout(jti: string) {
-    await this.tokenModel.updateOne({ jti }, { revoked: true });
-    return { message: 'Logged out successfully' };
-  }
-
-  async validateUser(email: string, password: string) {
-    const normalizedEmail = email.toLowerCase();
-    const user = await this.userModel.findOne({ email: normalizedEmail });
-    if (!user) throw new UnauthorizedException('Invalid credentials');
-
-    // If user was created by admin with default password, it will be set.
-    const valid =
-      user.passwordHash && (await bcrypt.compare(password, user.passwordHash));
-    if (!valid) throw new UnauthorizedException('Invalid credentials');
-
-    return user;
   }
 
   async loginAsApp(user: UserDocument) {

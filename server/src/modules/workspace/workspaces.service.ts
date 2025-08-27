@@ -156,15 +156,17 @@ export class WorkspacesService {
       
       if (!user) {
         tempPassword = generateRandomPassword(12);
-        user = await this.userModel.create([{
+        const newUsers = await this.userModel.create([{
           email: dto.email.toLowerCase(),
-          password: await bcrypt.hash(tempPassword, 10),
+          passwordHash: await bcrypt.hash(tempPassword, 10),
           workspaces: [{
             workspaceId: new Types.ObjectId(workspaceId),
             role: dto.role || UserRole.VIEWER,
-          }]
+            joinedAt: new Date()
+          }],
+          isActive: true
         }], { session });
-        user = user[0];
+        user = newUsers[0]; // Keep as UserDocument
       } else {
         // Check if user is already a member
         const isMember = user.workspaces.some(
@@ -222,16 +224,47 @@ export class WorkspacesService {
     } finally {
       await session.endSession();
     }
-    const existing = await this.userModel.findOne({ workspaceId, userId: user._id });
-    if (existing) return existing;
-    return this.userModel.create({
-      workspaceId,
-      userId: user._id,
-      role: dto.role,
-    });
   }
 
-  listUsers(workspaceId: string) {
-    return this.userModel.find({ workspaceId }).populate('userId', 'email').lean();
+  async listUsers(workspaceId: string) {
+    const workspace = await this.workspaceModel.findById(workspaceId);
+    if (!workspace) {
+      throw new NotFoundException('Workspace not found');
+    }
+    
+    return workspace.members.map(member => ({
+      userId: member.userId,
+      role: member.role,
+      joinedAt: member.joinedAt
+    }));
+  }
+
+  async revokeWorkspaceAccess(userId: string, workspaceId: string) {
+    const session = await this.workspaceModel.db.startSession();
+    session.startTransaction();
+
+    try {
+      // Remove user from workspace members
+      await this.workspaceModel.updateOne(
+        { _id: workspaceId },
+        { $pull: { members: { userId } } },
+        { session }
+      );
+
+      // Remove workspace from user's workspaces
+      await this.userModel.updateOne(
+        { _id: userId },
+        { $pull: { workspaces: { workspaceId } } },
+        { session }
+      );
+
+      await session.commitTransaction();
+      return { success: true };
+    } catch (error) {
+      await session.abortTransaction();
+      throw error;
+    } finally {
+      await session.endSession();
+    }
   }
 }
