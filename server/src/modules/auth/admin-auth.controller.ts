@@ -1,9 +1,10 @@
-import { Body, Controller, Post, UseGuards, Req } from '@nestjs/common';
+import { Body, Controller, Post, UseGuards, Req, UnauthorizedException } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { LogoutDto } from './dto/logout.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { AdminGuard } from '../../common/guards/admin.guard';
+import { JwtPayload } from './interfaces/jwt-payload.interface';
 
 @Controller('admin/auth')
 export class AdminAuthController {
@@ -11,13 +12,17 @@ export class AdminAuthController {
 
   @Post('login')
   async login(@Body() dto: LoginDto) {
-    const user = await this.authService.validateAdmin(dto.email, dto.password);
-    return this.authService.login(user);
+    const user = await this.authService.validateUser(dto.email, dto.password, true);
+    return this.authService.login(user, 'ADMIN');
   }
 
   @UseGuards(JwtAuthGuard, AdminGuard)
   @Post('logout')
-  async logout(@Body() dto: LogoutDto, @Req() req) {
-    return this.authService.logout(dto.jti);
+  async logout(@Req() req) {
+    const payload = req.user as JwtPayload;
+    if (!payload.jti) {
+      throw new UnauthorizedException('Invalid token');
+    }
+    return this.authService.logout(payload.jti);
   }
 }

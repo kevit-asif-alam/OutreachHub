@@ -6,6 +6,8 @@ import { UpdateWorkspaceDto } from './dto/update-workspace.dto';
 import { InviteUserDto } from './dto/invite-user.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { AdminGuard } from '../../common/guards/admin.guard';
+import { WorkspaceGuard, WorkspaceRoles } from '../../common/guards/workspace.guard';
+import { UserRole } from '../auth/schemas/user.schema';
 
 @UseGuards(JwtAuthGuard, AdminGuard)
 @Controller('admin/workspaces')
@@ -13,37 +15,79 @@ export class WorkspacesController {
   constructor(private readonly service: WorkspacesService) {}
 
   @Post()
-  create(@Body() dto: CreateWorkspaceDto) {
-    return this.service.create(dto);
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  async create(@Body() dto: CreateWorkspaceDto, @Req() req) {
+    return this.service.create({
+      ...dto,
+      createdBy: req.user.userId,
+    });
   }
 
   @Get()
-  findAll() {
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  async findAll() {
     return this.service.findAll();
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  @UseGuards(JwtAuthGuard, WorkspaceGuard)
+  @WorkspaceRoles(UserRole.EDITOR, UserRole.VIEWER)
+  async findOne(@Param('id') id: string) {
     return this.service.findOne(id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() dto: UpdateWorkspaceDto) {
-    return this.service.update(id, dto);
+  @UseGuards(JwtAuthGuard, WorkspaceGuard)
+  @WorkspaceRoles(UserRole.EDITOR)
+  async update(
+    @Param('id') id: string, 
+    @Body() dto: UpdateWorkspaceDto,
+    @Req() req
+  ) {
+    return this.service.update(id, dto, req.user.userId);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  async remove(@Param('id') id: string) {
     return this.service.remove(id);
   }
 
   @Post(':id/users')
-  invite(@Param('id') id: string, @Body() dto: InviteUserDto) {
-    return this.service.inviteUser(id, dto);
+  @UseGuards(JwtAuthGuard, WorkspaceGuard)
+  @WorkspaceRoles(UserRole.EDITOR)
+  async inviteUser(
+    @Param('id') workspaceId: string, 
+    @Body() dto: InviteUserDto,
+    @Req() req
+  ) {
+    try {
+      return await this.service.inviteUser(workspaceId, dto, req.user.userId);
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
   }
 
   @Get(':id/users')
-  listUsers(@Param('id') id: string) {
-    return this.service.listUsers(id);
+  @UseGuards(JwtAuthGuard, WorkspaceGuard)
+  @WorkspaceRoles(UserRole.EDITOR, UserRole.VIEWER)
+  async listWorkspaceUsers(@Param('id') workspaceId: string) {
+    return this.service.listUsers(workspaceId);
+  }
+
+  @Delete(':id/users/:userId')
+  @UseGuards(JwtAuthGuard, WorkspaceGuard)
+  @WorkspaceRoles(UserRole.EDITOR)
+  async removeUser(
+    @Param('id') workspaceId: string,
+    @Param('userId') userId: string,
+    @Req() req
+  ) {
+    // Prevent users from removing themselves
+    if (userId === req.user.userId) {
+      throw new ForbiddenException('Cannot remove yourself from workspace');
+    }
+    
+    return this.service.removeUser(workspaceId, userId);
   }
 }
