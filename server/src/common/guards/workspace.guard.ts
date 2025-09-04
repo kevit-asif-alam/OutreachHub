@@ -40,7 +40,7 @@ export class WorkspaceGuard implements CanActivate {
 
     // Check if user has the required role for the workspace
     const userWorkspace = user.workspaces?.find(
-      (ws: any) => ws.workspaceId === user.workspaceId
+      (ws: any) => ws.workspaceId.toString() === user.workspaceId
     );
 
     if (!userWorkspace) {

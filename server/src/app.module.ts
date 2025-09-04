@@ -3,6 +3,10 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AuthModule } from './modules/auth/auth.module';
 import { WorkspacesModule } from './modules/workspace/workspaces.module';
+import { ContactsModule } from './modules/contacts/contacts.module';
+import { MessageTemplatesModule } from './modules/message-templates/message-templates.module';
+import { CampaignsModule } from './modules/campaigns/campaigns.module';
+import { AnalyticsModule } from './modules/analytics/analytics.module';
 import configuration from './config/configuration';
 import { JwtModule } from '@nestjs/jwt';
 
@@ -29,6 +33,10 @@ import { JwtModule } from '@nestjs/jwt';
     }),
     AuthModule,
     WorkspacesModule,
+    ContactsModule,
+    MessageTemplatesModule,
+    CampaignsModule,
+    AnalyticsModule,
   ],
   controllers: [],
   providers: [],
