@@ -6,9 +6,19 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { AdminGuard } from '../../common/guards/admin.guard';
 import { JwtPayload } from './interfaces/jwt-payload.interface';
 
+export class RegisterDto {
+  email: string;
+  password: string;
+}
+
 @Controller('admin/auth')
 export class AdminAuthController {
   constructor(private readonly authService: AuthService) {}
+
+  @Post('register')
+  async register(@Body() dto: RegisterDto) {
+    return this.authService.register(dto.email, dto.password, true);
+  }
 
   @Post('login')
   async login(@Body() dto: LoginDto) {
