@@ -47,29 +47,34 @@ export class JwtStrategy extends PassportStrategy(Strategy, JWT_STRATEGY_NAME) {
       throw new UnauthorizedException('Invalid access to portal');
     }
 
-    // For app portal, verify workspace access
-    if (payload.portal === 'APP' && payload.workspaceId) {
+    // For app portal, verify workspace access and attach workspaces
+    let workspaces: any[] | undefined = undefined;
+    if (payload.portal === 'APP') {
       const user = await this.userModel.findById(payload.sub).select('workspaces');
       if (!user) {
         throw new UnauthorizedException('User not found');
       }
+      workspaces = user.workspaces as any[];
 
-      const hasAccess = user.workspaces.some(
-        ws => ws.workspaceId.toString() === payload.workspaceId
-      );
-
-      if (!hasAccess) {
-        throw new UnauthorizedException('No access to the specified workspace');
+      if (payload.workspaceId) {
+        const hasAccess = user.workspaces.some(
+          (ws) => ws.workspaceId.toString() === payload.workspaceId,
+        );
+        if (!hasAccess) {
+          throw new UnauthorizedException('No access to the specified workspace');
+        }
       }
     }
 
     return {
+      sub: payload.sub,
       userId: payload.sub,
       email: payload.email,
       isAdmin: payload.isAdmin,
       portal: payload.portal,
       workspaceId: payload.workspaceId,
       jti: payload.jti,
+      workspaces,
     };
   }
 }

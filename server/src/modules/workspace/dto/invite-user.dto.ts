@@ -1,12 +1,12 @@
 import { IsEmail, IsEnum, IsOptional, MinLength } from 'class-validator';
-import { WorkspaceRole } from '../schemas/workspace-user.schema';
+import { UserRole } from '../../auth/schemas/user.schema';
 
 export class InviteUserDto {
   @IsEmail()
   email: string;
 
-  @IsEnum(WorkspaceRole)
-  role: WorkspaceRole;
+  @IsEnum(UserRole)
+  role: UserRole;
 
   @IsOptional()
   @MinLength(8)
