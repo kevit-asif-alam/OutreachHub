@@ -38,7 +38,7 @@ export interface WorkspaceResponse {
 
 export const authService = {
   // Admin auth
-  adminRegister: async (data: RegisterRequest): Promise<AuthResponse> => {
+  adminRegister: async (data: RegisterRequest): Promise<{ id: string; email: string; isAdmin: boolean }> => {
     const response = await api.post('/admin/auth/register', data);
     return response.data;
   },

@@ -156,6 +156,17 @@ export class AuthService {
       throw new BadRequestException('User not found');
     }
 
+    // Revoke any active tokens for this user scoped to that workspace
+    await this.tokenModel.updateMany(
+      {
+        userId: new Types.ObjectId(userId),
+        workspaceId: new Types.ObjectId(workspaceId),
+        revoked: { $ne: true },
+        expiresAt: { $gt: new Date() },
+      },
+      { $set: { revoked: true, revokedAt: new Date() } as any },
+    );
+
     return { success: true };
   }
 
