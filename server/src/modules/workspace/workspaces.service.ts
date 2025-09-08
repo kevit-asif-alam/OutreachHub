@@ -23,46 +23,40 @@ export class WorkspacesService {
   ) {}
 
   async create(dto: CreateWorkspaceDto & { createdBy: string }) {
-    const session = await this.workspaceModel.db.startSession();
-    session.startTransaction();
-
-    try {
-      // Create the workspace
-      const workspace = await this.workspaceModel.create([{
-        ...dto,
-        members: [{
-          userId: dto.createdBy,
+    // Create the workspace (no session transactions for dev stand-alone MongoDB)
+    const workspace = await this.workspaceModel.create({
+      name: dto.name,
+      description: dto.description,
+      createdBy: new Types.ObjectId(dto.createdBy),
+      members: [
+        {
+          userId: new Types.ObjectId(dto.createdBy),
           role: UserRole.EDITOR,
           joinedAt: new Date(),
-        }]
-      }], { session });
-
-      // Add workspace to user's workspaces
-      await this.userModel.findByIdAndUpdate(
-        dto.createdBy,
-        {
-          $addToSet: {
-            workspaces: {
-              workspaceId: workspace[0]._id,
-              role: UserRole.EDITOR,
-            }
-          }
         },
-        { session }
-      );
+      ],
+    });
 
-      await session.commitTransaction();
-      return workspace[0];
-    } catch (error) {
-      await session.abortTransaction();
-      throw error;
-    } finally {
-      await session.endSession();
-    }
+    // Add workspace to user's workspaces
+    await this.userModel.findByIdAndUpdate(dto.createdBy, {
+      $addToSet: {
+        workspaces: {
+          workspaceId: workspace._id,
+          role: UserRole.EDITOR,
+        },
+      },
+    });
+
+    return workspace;
   }
 
   async findAll() {
     return this.workspaceModel.find().lean();
+  }
+
+  // Return workspaces created by a specific admin
+  async findAllByAdmin(adminId: string) {
+    return this.workspaceModel.find({ createdBy: new Types.ObjectId(adminId) }).lean();
   }
 
   async findOne(id: string) {
@@ -76,6 +70,21 @@ export class WorkspacesService {
     }
     
     return workspace;
+  }
+
+  // Ensure workspace is owned by admin
+  private async ensureOwned(workspaceId: string, adminId: string) {
+    const ws = await this.workspaceModel.findById(workspaceId).lean();
+    if (!ws) throw new NotFoundException('Workspace not found');
+    if (ws.createdBy?.toString() !== adminId) {
+      throw new ForbiddenException('Not owner of this workspace');
+    }
+    return ws;
+  }
+
+  async findOneOwned(id: string, adminId: string) {
+    await this.ensureOwned(id, adminId);
+    return this.findOne(id);
   }
 
   async update(id: string, dto: UpdateWorkspaceDto, updatedBy: string) {
@@ -103,127 +112,110 @@ export class WorkspacesService {
     );
   }
 
-  async remove(id: string) {
-    const session = await this.workspaceModel.db.startSession();
-    session.startTransaction();
-
-    try {
-      // Remove workspace from all users
-      await this.userModel.updateMany(
-        { 'workspaces.workspaceId': id },
-        { $pull: { workspaces: { workspaceId: id } } },
-        { session }
-      );
-
-      // Delete the workspace
-      const result = await this.workspaceModel.findByIdAndDelete(id, { session });
-      
-      await session.commitTransaction();
-      return result;
-    } catch (error) {
-      await session.abortTransaction();
-      throw error;
-    } finally {
-      await session.endSession();
-    }
+  async updateOwned(id: string, dto: UpdateWorkspaceDto, adminId: string) {
+    await this.ensureOwned(id, adminId);
+    return this.update(id, dto, adminId);
   }
 
-  async inviteUser(workspaceId: string, dto: InviteUserDto, invitedBy: string) {
-    const session = await this.workspaceModel.db.startSession();
-    session.startTransaction();
+  async remove(id: string) {
+    // Remove workspace from all users
+    await this.userModel.updateMany(
+      { 'workspaces.workspaceId': new Types.ObjectId(id) },
+      { $pull: { workspaces: { workspaceId: new Types.ObjectId(id) } } },
+    );
 
-    try {
-      // Check if workspace exists and inviter has permission
-      const workspace = await this.workspaceModel.findById(workspaceId).session(session);
-      if (!workspace) {
-        throw new NotFoundException('Workspace not found');
-      }
+    // Delete the workspace
+    return this.workspaceModel.findByIdAndDelete(id);
+  }
 
-      const isInviterAdmin = workspace.members.some(
-        m => m.userId.toString() === invitedBy && m.role === UserRole.EDITOR
-      );
+  async removeOwned(id: string, adminId: string) {
+    await this.ensureOwned(id, adminId);
+    return this.remove(id);
+  }
 
-      if (!isInviterAdmin) {
-        throw new ForbiddenException('Insufficient permissions to invite users');
-      }
-
-      // Find or create user
-      let user = await this.userModel
-        .findOne({ email: dto.email.toLowerCase() })
-        .session(session);
-
-      let tempPassword: string | undefined;
-      
-      if (!user) {
-        tempPassword = generateRandomPassword(12);
-        const newUsers = await this.userModel.create([{
-          email: dto.email.toLowerCase(),
-          passwordHash: await bcrypt.hash(tempPassword, 10),
-          workspaces: [{
-            workspaceId: new Types.ObjectId(workspaceId),
-            role: dto.role || UserRole.VIEWER,
-            joinedAt: new Date()
-          }],
-          isActive: true
-        }], { session });
-        user = newUsers[0]; // Keep as UserDocument
-      } else {
-        // Check if user is already a member
-        const isMember = user.workspaces.some(
-          ws => ws.workspaceId.toString() === workspaceId
-        );
-
-        if (isMember) {
-          throw new ConflictException('User is already a member of this workspace');
-        }
-
-        // Add workspace to user
-        await this.userModel.findByIdAndUpdate(
-          user._id,
-          {
-            $addToSet: {
-              workspaces: {
-                workspaceId: new Types.ObjectId(workspaceId),
-                role: dto.role || UserRole.VIEWER,
-              }
-            }
-          },
-          { session }
-        );
-      }
-
-      // Add user to workspace members
-      await this.workspaceModel.findByIdAndUpdate(
-        workspaceId,
-        {
-          $addToSet: {
-            members: {
-              userId: user._id,
-              role: dto.role || UserRole.VIEWER,
-              joinedAt: new Date(),
-              invitedBy: new Types.ObjectId(invitedBy),
-            }
-          }
-        },
-        { session }
-      );
-
-      await session.commitTransaction();
-      
-      return { 
-        user: {
-          id: user._id,
-          email: user.email,
-          role: dto.role || UserRole.VIEWER,
-          tempPassword: tempPassword ? 'TEMPORARY_PASSWORD' : undefined,
-        }
-      };
-    } catch (error) {
-      await session.abortTransaction();
-      throw error;
-    } finally {
-      await session.endSession();
+  async inviteUser(workspaceId: string, dto: InviteUserDto, invitedBy: string, isAdmin: boolean) {
+    // Check if workspace exists and inviter has permission
+    const workspace = await this.workspaceModel.findById(workspaceId);
+    if (!workspace) {
+      throw new NotFoundException('Workspace not found');
     }
+
+    const isInviterEditorInWorkspace = workspace.members.some(
+      (m) => m.userId.toString() === invitedBy && m.role === UserRole.EDITOR,
+    );
+    if (!(isAdmin || isInviterEditorInWorkspace)) {
+      throw new ForbiddenException('Insufficient permissions to invite users');
+    }
+
+    // Find or create user and assign a dummy password (provided or generated)
+    let user = await this.userModel.findOne({ email: dto.email.toLowerCase() });
+    let tempPassword: string = dto.tempPassword && dto.tempPassword.length >= 8
+      ? dto.tempPassword
+      : generateRandomPassword(12);
+
+    if (!user) {
+      user = await this.userModel.create({
+        email: dto.email.toLowerCase(),
+        passwordHash: await bcrypt.hash(tempPassword, 10),
+        workspaces: [
+          {
+            workspaceId: new Types.ObjectId(workspaceId),
+            role: (dto as any).role || UserRole.VIEWER,
+            joinedAt: new Date(),
+          },
+        ],
+        isActive: true,
+      });
+    } else {
+      // Check if user is already a member
+      const isMember = user.workspaces.some(
+        (ws) => ws.workspaceId.toString() === workspaceId,
+      );
+      if (isMember) {
+        throw new ConflictException('User is already a member of this workspace');
+      }
+
+      // Reset the user's password to the dummy one to allow first login
+      user.passwordHash = await bcrypt.hash(tempPassword, 10);
+      await user.save();
+
+      // Add workspace to user
+      await this.userModel.findByIdAndUpdate(user._id, {
+        $addToSet: {
+          workspaces: {
+            workspaceId: new Types.ObjectId(workspaceId),
+            role: (dto as any).role || UserRole.VIEWER,
+          },
+        },
+      });
+    }
+
+    // Add user to workspace members
+    await this.workspaceModel.findByIdAndUpdate(workspaceId, {
+      $addToSet: {
+        members: {
+          userId: user._id,
+          role: (dto as any).role || UserRole.VIEWER,
+          joinedAt: new Date(),
+          invitedBy: new Types.ObjectId(invitedBy),
+        },
+      },
+    });
+
+    return {
+      user: {
+        id: user._id,
+        email: user.email,
+        role: (dto as any).role || UserRole.VIEWER,
+        tempPassword,
+      },
+    };
+  }
+
+  // Owned variants enforcing creator ownership
+  async inviteUserOwned(workspaceId: string, dto: InviteUserDto, adminId: string, isAdmin: boolean) {
+    await this.ensureOwned(workspaceId, adminId);
+    return this.inviteUser(workspaceId, dto, adminId, isAdmin);
   }
 
   async listUsers(workspaceId: string) {
@@ -239,32 +231,29 @@ export class WorkspacesService {
     }));
   }
 
+  async listUsersOwned(workspaceId: string, adminId: string) {
+    await this.ensureOwned(workspaceId, adminId);
+    return this.listUsers(workspaceId);
+  }
+
   async revokeWorkspaceAccess(userId: string, workspaceId: string) {
-    const session = await this.workspaceModel.db.startSession();
-    session.startTransaction();
+    // Remove user from workspace members
+    await this.workspaceModel.updateOne(
+      { _id: new Types.ObjectId(workspaceId) },
+      { $pull: { members: { userId: new Types.ObjectId(userId) } } },
+    );
 
-    try {
-      // Remove user from workspace members
-      await this.workspaceModel.updateOne(
-        { _id: workspaceId },
-        { $pull: { members: { userId } } },
-        { session }
-      );
+    // Remove workspace from user's workspaces
+    await this.userModel.updateOne(
+      { _id: new Types.ObjectId(userId) },
+      { $pull: { workspaces: { workspaceId: new Types.ObjectId(workspaceId) } } },
+    );
 
-      // Remove workspace from user's workspaces
-      await this.userModel.updateOne(
-        { _id: userId },
-        { $pull: { workspaces: { workspaceId } } },
-        { session }
-      );
+    return { success: true };
+  }
 
-      await session.commitTransaction();
-      return { success: true };
-    } catch (error) {
-      await session.abortTransaction();
-      throw error;
-    } finally {
-      await session.endSession();
-    }
+  async revokeWorkspaceAccessOwned(userId: string, workspaceId: string, adminId: string) {
+    await this.ensureOwned(workspaceId, adminId);
+    return this.revokeWorkspaceAccess(userId, workspaceId);
   }
 }
