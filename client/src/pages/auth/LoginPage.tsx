@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { authService } from '../../services/auth';
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -20,8 +21,12 @@ const LoginPage: React.FC = () => {
     setError('');
 
     try {
-      await login(email, password, isAdmin);
-      navigate(isAdmin ? '/admin' : '/dashboard');
+      const result = await login(email, password, isAdmin);
+      if (!isAdmin && result && (result as any).requiresWorkspaceSelection) {
+        navigate('/workspace-selection');
+      } else {
+        navigate(isAdmin ? '/admin' : '/dashboard');
+      }
     } catch (err: any) {
       setError(err.response?.data?.message || 'Login failed. Please try again.');
     } finally {
@@ -41,10 +46,13 @@ const LoginPage: React.FC = () => {
     }
 
     try {
-      // For now, we'll just show a success message since we don't have a register endpoint in the frontend
-      setError('');
-      setShowRegister(false);
-      alert('Registration successful! Please login with your credentials.');
+      // Create admin user
+      await authService.adminRegister({ email: registerData.email, password: registerData.password });
+      // Immediately login as admin to establish session
+      const result = await login(registerData.email, registerData.password, true);
+      if (result === undefined) {
+        navigate('/admin');
+      }
     } catch (err: any) {
       setError(err.response?.data?.message || 'Registration failed. Please try again.');
     } finally {
