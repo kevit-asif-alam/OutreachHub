@@ -1,44 +1,28 @@
-import {
-  Injectable,
-  CanActivate,
-  ExecutionContext,
-  UnauthorizedException,
-} from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { Token, TokenDocument } from '../../modules/auth/schemas/token.schema';
+import { Injectable, ExecutionContext, UnauthorizedException } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
+import { JWT_STRATEGY_NAME } from '../../modules/auth/strategies/jwt.strategy';
 
 @Injectable()
-export class JwtAuthGuard implements CanActivate {
-  constructor(
-    private jwtService: JwtService,
-    @InjectModel(Token.name) private tokenModel: Model<TokenDocument>,
-  ) {}
-
+export class JwtAuthGuard extends AuthGuard(JWT_STRATEGY_NAME) {
   async canActivate(context: ExecutionContext): Promise<boolean> {
+    return (await super.canActivate(context)) as boolean;
+  }
+
+  handleRequest(err: any, user: any, _info: any, context: ExecutionContext) {
+    if (err || !user) {
+      throw err || new UnauthorizedException('Invalid or expired token');
+    }
+
+    // Enforce portal access consistency with path
     const req = context.switchToHttp().getRequest();
-    const authHeader = req.headers['authorization'];
-
-    if (!authHeader) throw new UnauthorizedException('Missing Authorization header');
-    const [type, token] = authHeader.split(' ');
-
-    if (type !== 'Bearer' || !token) {
-      throw new UnauthorizedException('Invalid Authorization header format');
+    const requestedPath = req.path as string;
+    const isAdminPath = requestedPath.startsWith('/admin');
+    if ((isAdminPath && user.portal !== 'ADMIN') || (!isAdminPath && user.portal === 'ADMIN')) {
+      throw new UnauthorizedException('Invalid access to portal');
     }
 
-    try {
-      const payload = this.jwtService.verify(token);
-      const tokenDoc = await this.tokenModel.findOne({
-        jti: payload.jti,
-        revoked: false,
-      });
-
-      if (!tokenDoc) throw new UnauthorizedException('Token revoked or not found');
-      req.user = payload;
-      return true;
-    } catch (err) {
-      throw new UnauthorizedException('Invalid or expired token');
-    }
+    // Attach the validated user (already includes workspace checks for APP)
+    req.user = user;
+    return user;
   }
 }
