@@ -9,6 +9,7 @@ import { User, UserSchema } from './schemas/user.schema';
 import { Token, TokenSchema } from './schemas/token.schema';
 import { AppAuthController } from './app-auth.controller';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { Workspace, WorkspaceSchema } from '../workspace/schemas/workspace.schema';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
     MongooseModule.forFeature([
       { name: User.name, schema: UserSchema },
       { name: Token.name, schema: TokenSchema },
+      { name: Workspace.name, schema: WorkspaceSchema },
     ]),
   ],
   controllers: [AdminAuthController, AppAuthController],
