@@ -186,4 +186,22 @@ export class AuthService {
   async loginAsApp(user: UserDocument) {
     return this.signAndStore(user, 'APP');
   }
+
+  async changePassword(userId: string, currentPassword: string, newPassword: string) {
+    if (!newPassword || newPassword.length < 8) {
+      throw new BadRequestException('New password must be at least 8 characters long');
+    }
+    const user = await this.userModel.findById(userId).select('+passwordHash');
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+    const valid = await bcrypt.compare(currentPassword, user.passwordHash);
+    if (!valid) {
+      throw new UnauthorizedException('Current password is incorrect');
+    }
+    user.passwordHash = await bcrypt.hash(newPassword, 10);
+    await user.save();
+    // Optionally revoke all tokens so they must login again; here we keep them active.
+    return { success: true };
+  }
 }

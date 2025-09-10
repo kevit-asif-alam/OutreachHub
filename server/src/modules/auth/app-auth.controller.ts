@@ -1,4 +1,4 @@
-import { Body, Controller, Post, UseGuards, Req, UnauthorizedException } from '@nestjs/common';
+import { Body, Controller, Post, UseGuards, Req, UnauthorizedException, Get } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -6,6 +6,7 @@ import { AppGuard } from '../../common/guards/app.guard';
 import { JwtPayload } from './interfaces/jwt-payload.interface';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
+import { User, UserDocument } from './schemas/user.schema';
 import { Workspace, WorkspaceDocument } from '../workspace/schemas/workspace.schema';
 
 @Controller('app/auth')
@@ -13,6 +14,7 @@ export class AppAuthController {
   constructor(
     private readonly authService: AuthService,
     @InjectModel(Workspace.name) private workspaceModel: Model<WorkspaceDocument>,
+    @InjectModel(User.name) private userModel: Model<UserDocument>,
   ) {}
 
   @Post('login')
@@ -73,5 +75,35 @@ export class AppAuthController {
       throw new UnauthorizedException('Invalid token');
     }
     return this.authService.logout(payload.jti);
+  }
+
+  @UseGuards(JwtAuthGuard, AppGuard)
+  @Get('profile')
+  async profile(@Req() req) {
+    const payload = req.user as JwtPayload & { workspaceId?: string };
+    const user = await this.userModel.findById(new Types.ObjectId(payload.sub)).lean();
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+    let workspace: any = undefined;
+    let role: any = undefined;
+    if (payload.workspaceId) {
+      const wsDoc = await this.workspaceModel.findById(new Types.ObjectId(payload.workspaceId)).select('name').lean();
+      const userWs = (user.workspaces || []).find((w: any) => w.workspaceId.toString() === payload.workspaceId);
+      workspace = wsDoc ? { workspaceId: payload.workspaceId, name: wsDoc.name } : undefined;
+      role = userWs?.role;
+    }
+    return {
+      email: user.email,
+      workspace,
+      role,
+      userId: user._id,
+    };
+  }
+
+  @UseGuards(JwtAuthGuard, AppGuard)
+  @Post('change-password')
+  async changePassword(@Req() req, @Body() body: { currentPassword: string; newPassword: string }) {
+    return this.authService.changePassword(req.user.sub, body.currentPassword, body.newPassword);
   }
 }
