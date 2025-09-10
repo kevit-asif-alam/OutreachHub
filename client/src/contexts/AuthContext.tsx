@@ -20,6 +20,8 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [currentWorkspace, setCurrentWorkspace] = useState<Workspace | null>(null);
+  // Keep pending credentials in-memory only (not persisted) for workspace selection
+  const [pendingCredentials, setPendingCredentials] = useState<{ email: string; password: string } | null>(null);
 
   useEffect(() => {
     // Check for stored auth data on app load
@@ -42,7 +44,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   }, []);
 
-  const login = async (email: string, password: string, isAdmin: boolean, workspaceId?: string) => {
+  const login: AuthContextType['login'] = async (email, password, isAdmin, workspaceId) => {
     try {
       let response;
       
@@ -54,30 +56,29 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       // Handle workspace selection for app users
       if (!isAdmin && 'workspaces' in response && response.workspaces) {
-        if (workspaceId) {
-          // User selected a specific workspace
-          const selectedWorkspace = response.workspaces.find(
+        if (!workspaceId) {
+          // Step 1: credentials are valid; prompt user to select workspace
+          const partialUser: User = {
+            id: (response as any).userId,
+            email: (response as any).email,
+            isAdmin: false,
+            workspaces: (response as any).workspaces,
+          };
+          setUser(partialUser);
+          localStorage.setItem('user', JSON.stringify(partialUser));
+
+          // keep credentials in-memory for step 2 (do NOT persist password)
+          setPendingCredentials({ email, password });
+          return { requiresWorkspaceSelection: true };
+        } else {
+          // Step 2: workspace selected; set current workspace from provided response
+          const selectedWorkspace = (response as any).user?.workspaces?.find(
             (ws: any) => ws.workspaceId === workspaceId
-          );
+          ) || (response as any).workspace || null;
           if (selectedWorkspace) {
             setCurrentWorkspace(selectedWorkspace);
             localStorage.setItem('currentWorkspace', JSON.stringify(selectedWorkspace));
           }
-        } else {
-          // User needs to select a workspace
-          setUser({
-            id: response.userId,
-            email: response.email,
-            isAdmin: false,
-            workspaces: response.workspaces,
-          });
-          localStorage.setItem('user', JSON.stringify({
-            id: response.userId,
-            email: response.email,
-            isAdmin: false,
-            workspaces: response.workspaces,
-          }));
-          return; // Don't set token yet, wait for workspace selection
         }
       }
 
@@ -86,6 +87,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setUser(authResp.user);
       localStorage.setItem('user', JSON.stringify(authResp.user));
       localStorage.setItem('accessToken', authResp.accessToken);
+      setPendingCredentials(null);
     } catch (error) {
       console.error('Login error:', error);
       throw error;
@@ -104,19 +106,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     } finally {
       setUser(null);
       setCurrentWorkspace(null);
+      setPendingCredentials(null);
       localStorage.removeItem('user');
       localStorage.removeItem('currentWorkspace');
       localStorage.removeItem('accessToken');
     }
   };
 
-  const selectWorkspace = (workspace: Workspace) => {
+  const selectWorkspace = async (workspace: Workspace) => {
     setCurrentWorkspace(workspace);
     localStorage.setItem('currentWorkspace', JSON.stringify(workspace));
-    
-    // Now login with the selected workspace
-    if (user) {
-      login(user.email, '', false, workspace.workspaceId);
+    // Complete login using pending credentials for the chosen workspace
+    if (pendingCredentials) {
+      const { email, password } = pendingCredentials;
+      await login(email, password, false, workspace.workspaceId);
     }
   };
 

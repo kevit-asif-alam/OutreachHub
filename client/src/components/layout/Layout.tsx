@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
@@ -8,6 +8,52 @@ interface LayoutProps {
   title: string;
   isAdmin?: boolean;
 }
+
+const ProfileMenu: React.FC<{ userEmail: string; onProfile: () => void; onLogout: () => void }> = ({ userEmail, onProfile, onLogout }) => {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const initial = (userEmail || 'U').charAt(0).toUpperCase();
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className="w-9 h-9 rounded-full bg-indigo-600 text-white flex items-center justify-center font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        title={userEmail}
+      >
+        {initial}
+      </button>
+      {open && (
+        <div className="absolute right-0 mt-2 w-44 bg-white border border-gray-200 rounded-md shadow-lg z-50">
+          <div className="px-3 py-2 text-xs text-gray-500 border-b truncate" title={userEmail}>{userEmail}</div>
+          <button
+            onClick={() => { setOpen(false); onProfile(); }}
+            className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50"
+          >
+            Profile
+          </button>
+          <button
+            onClick={() => { setOpen(false); onLogout(); }}
+            className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50"
+          >
+            Logout
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
 
 const Layout: React.FC<LayoutProps> = ({ children, title, isAdmin = false }) => {
   const { user, logout, currentWorkspace } = useAuth();
@@ -60,7 +106,7 @@ const Layout: React.FC<LayoutProps> = ({ children, title, isAdmin = false }) => 
             <div className="flex items-center space-x-4">
               {!isAdmin && currentWorkspace && (
                 <div className="text-sm text-gray-600">
-                  <span className="font-medium">Workspace:</span> {currentWorkspace.workspaceId.slice(-8)}
+                  <span className="font-medium">Workspace:</span> {currentWorkspace.name || 'Workspace'} ({currentWorkspace.workspaceId.slice(-8)})
                   <span className={`ml-2 px-2 py-1 text-xs font-semibold rounded-full ${
                     currentWorkspace.role === 'editor' 
                       ? 'bg-green-100 text-green-800' 
@@ -70,15 +116,17 @@ const Layout: React.FC<LayoutProps> = ({ children, title, isAdmin = false }) => 
                   </span>
                 </div>
               )}
-              <div className="text-sm text-gray-600">
-                {user?.email}
-              </div>
-              <button
-                onClick={handleLogout}
-                className="bg-gray-100 text-gray-700 px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-200 transition-colors"
-              >
-                Logout
-              </button>
+              {/* Profile Dropdown (app users only) */}
+              {!isAdmin ? (
+                <ProfileMenu userEmail={user?.email || ''} onLogout={handleLogout} onProfile={() => navigate('/profile')} />
+              ) : (
+                <button
+                  onClick={handleLogout}
+                  className="bg-gray-100 text-gray-700 px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-200 transition-colors"
+                >
+                  Logout
+                </button>
+              )}
             </div>
           </div>
         </div>

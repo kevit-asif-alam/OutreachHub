@@ -15,8 +15,51 @@ const WorkspaceDetails: React.FC = () => {
     role: 'viewer' as 'editor' | 'viewer',
     tempPassword: '',
   });
+  // Edit member modal state
+  const [editMemberOpen, setEditMemberOpen] = useState(false);
+  const [editMemberId, setEditMemberId] = useState<string | null>(null);
+  const [memberForm, setMemberForm] = useState<{ email: string; role: 'editor' | 'viewer'; tempPassword: string }>({
+    email: '',
+    role: 'viewer',
+    tempPassword: '',
+  });
+
+  const updateWorkspaceUserMutation = useMutation({
+    mutationFn: (payload: { userId: string; data: { email?: string; role?: 'editor' | 'viewer'; tempPassword?: string } }) =>
+      workspacesService.updateWorkspaceUser(id!, payload.userId, payload.data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['workspace', id] });
+      setEditMemberOpen(false);
+      setEditMemberId(null);
+    },
+    onError: (err: any) => setError(err.response?.data?.message || 'Failed to update user'),
+  });
+
+  const updateWorkspaceMutation = useMutation({
+    mutationFn: (data: { name?: string; description?: string }) => workspacesService.update(id!, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['workspace', id] });
+      setIsEditingWs(false);
+    },
+    onError: (err: any) => {
+      setError(err.response?.data?.message || 'Failed to update workspace');
+    },
+  });
+
+  const deleteWorkspaceMutation = useMutation({
+    mutationFn: () => workspacesService.delete(id!),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['workspaces'] });
+      navigate('/admin/workspaces');
+    },
+    onError: (err: any) => {
+      setError(err.response?.data?.message || 'Failed to delete workspace');
+    },
+  });
   const [error, setError] = useState('');
   const [inviteSuccessMsg, setInviteSuccessMsg] = useState<string | null>(null);
+  const [isEditingWs, setIsEditingWs] = useState(false);
+  const [wsForm, setWsForm] = useState({ name: '', description: '' });
 
   const { data: workspace, isLoading, error: fetchError } = useQuery({
     queryKey: ['workspace', id],
@@ -112,11 +155,34 @@ const WorkspaceDetails: React.FC = () => {
       <div className="space-y-6">
         {/* Workspace Info */}
         <div className="bg-white shadow rounded-lg">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-xl font-semibold text-gray-900">{workspace.name}</h2>
-            {workspace.description && (
-              <p className="text-gray-600 text-sm mt-1">{workspace.description}</p>
-            )}
+          <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900">{workspace.name}</h2>
+              {workspace.description && (
+                <p className="text-gray-600 text-sm mt-1">{workspace.description}</p>
+              )}
+            </div>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => {
+                  setWsForm({ name: workspace.name, description: workspace.description || '' });
+                  setIsEditingWs(true);
+                }}
+                className="px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50"
+              >
+                Edit
+              </button>
+              <button
+                onClick={() => {
+                  if (window.confirm('Delete this workspace? This action cannot be undone.')) {
+                    deleteWorkspaceMutation.mutate();
+                  }
+                }}
+                className="px-3 py-1 text-sm bg-red-600 text-white rounded-md hover:bg-red-700"
+              >
+                Delete
+              </button>
+            </div>
           </div>
           <div className="px-6 py-4">
             <div className="grid grid-cols-2 gap-4 text-sm">
@@ -132,6 +198,59 @@ const WorkspaceDetails: React.FC = () => {
               </div>
             </div>
           </div>
+
+          {isEditingWs && (
+            <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  updateWorkspaceMutation.mutate({
+                    name: wsForm.name,
+                    description: wsForm.description,
+                  });
+                }}
+                className="space-y-3"
+              >
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                    <input
+                      type="text"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      value={wsForm.name}
+                      onChange={(e) => setWsForm({ ...wsForm, name: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                    <input
+                      type="text"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      value={wsForm.description}
+                      onChange={(e) => setWsForm({ ...wsForm, description: e.target.value })}
+                    />
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50"
+                    disabled={updateWorkspaceMutation.isPending}
+                  >
+                    {updateWorkspaceMutation.isPending ? 'Saving...' : 'Save Changes'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsEditingWs(false)}
+                    className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
         </div>
 
         {/* Members Section */}
@@ -246,14 +365,21 @@ const WorkspaceDetails: React.FC = () => {
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                        member.role === 'editor' 
-                          ? 'bg-green-100 text-green-800' 
-                          : 'bg-blue-100 text-blue-800'
-                      }`}>
-                        {member.role}
-                      </span>
+                    <div className="flex items-center space-x-3">
+                      <button
+                        className="px-2 py-1 text-xs border border-gray-300 rounded-md hover:bg-gray-50"
+                        onClick={() => {
+                          setEditMemberId(memberId);
+                          setMemberForm({
+                            email: memberEmail || '',
+                            role: (member.role as 'editor' | 'viewer') || 'viewer',
+                            tempPassword: '',
+                          });
+                          setEditMemberOpen(true);
+                        }}
+                      >
+                        Edit
+                      </button>
                       <button
                         onClick={() => handleRemoveUser(memberId)}
                         className="text-red-600 hover:text-red-800 transition-colors"
@@ -272,10 +398,86 @@ const WorkspaceDetails: React.FC = () => {
             )}
           </div>
         </div>
+        {/* Edit Member Modal */}
+        {editMemberOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center">
+            <div className="absolute inset-0 bg-black/30" onClick={() => setEditMemberOpen(false)} />
+            <div className="relative bg-white rounded-lg shadow-xl w-full max-w-md mx-4 p-6 z-10">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Edit Workspace User</h3>
+              {error && (
+                <div className="mb-3 bg-red-50 border border-red-200 rounded-md p-3 text-sm text-red-800">{error}</div>
+              )}
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (!editMemberId) return;
+                  const payload: any = {
+                    email: memberForm.email?.trim() || undefined,
+                    role: memberForm.role,
+                    tempPassword: memberForm.tempPassword?.trim() || undefined,
+                  };
+                  updateWorkspaceUserMutation.mutate({ userId: editMemberId, data: payload });
+                }}
+                className="space-y-4"
+              >
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                  <input
+                    type="email"
+                    value={memberForm.email}
+                    onChange={(e) => setMemberForm({ ...memberForm, email: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
+                  <select
+                    value={memberForm.role}
+                    onChange={(e) => setMemberForm({ ...memberForm, role: e.target.value as 'editor' | 'viewer' })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  >
+                    <option value="viewer">Viewer</option>
+                    <option value="editor">Editor</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Temporary Password (optional)</label>
+                  <input
+                    type="text"
+                    placeholder="Enter new temp password (min 8 chars)"
+                    value={memberForm.tempPassword}
+                    onChange={(e) => setMemberForm({ ...memberForm, tempPassword: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+                <div className="flex items-center justify-end space-x-2">
+                  <button
+                    type="button"
+                    onClick={() => setEditMemberOpen(false)}
+                    className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={updateWorkspaceUserMutation.isPending}
+                    className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50"
+                  >
+                    {updateWorkspaceUserMutation.isPending ? 'Saving...' : 'Save'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
       </div>
     </div>
   );
 };
+
+// Edit Member Modal (inline for simplicity)
 
 export default WorkspaceDetails;
 
