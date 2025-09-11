@@ -1,6 +1,7 @@
 import React from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { EyeIcon, UserIcon } from '@heroicons/react/24/outline';
 
 const WorkspaceSelectionPage: React.FC = () => {
   const { user, selectWorkspace } = useAuth();
@@ -10,6 +11,8 @@ const WorkspaceSelectionPage: React.FC = () => {
     await selectWorkspace(workspace);
     navigate('/dashboard');
   };
+
+  const isAdminSelectingWorkspace = user?.isAdmin;
 
   if (!user?.workspaces?.length) {
     return (
@@ -32,11 +35,24 @@ const WorkspaceSelectionPage: React.FC = () => {
             </svg>
           </div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Select Workspace
+            {isAdminSelectingWorkspace ? 'Select Workspace to View' : 'Select Workspace'}
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Choose a workspace to continue
+            {isAdminSelectingWorkspace 
+              ? 'Choose a workspace to view as an admin' 
+              : 'Choose a workspace to continue'
+            }
           </p>
+          {isAdminSelectingWorkspace && (
+            <div className="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-3">
+              <div className="flex items-center">
+                <EyeIcon className="h-5 w-5 text-blue-600 mr-2" />
+                <p className="text-sm text-blue-800">
+                  <strong>Admin Mode:</strong> You'll be able to view this workspace while maintaining admin privileges.
+                </p>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="space-y-4">
@@ -47,10 +63,18 @@ const WorkspaceSelectionPage: React.FC = () => {
               onClick={() => handleWorkspaceSelect(workspace)}
             >
               <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900">
-                    {workspace.name || 'Workspace'} ({workspace.workspaceId.slice(-8)})
-                  </h3>
+                <div className="flex-1">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      {workspace.name || 'Workspace'} ({workspace.workspaceId.slice(-8)})
+                    </h3>
+                    {isAdminSelectingWorkspace && (
+                      <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
+                        <EyeIcon className="h-3 w-3 mr-1" />
+                        Admin View
+                      </span>
+                    )}
+                  </div>
                   <p className="text-sm text-gray-600 capitalize">
                     Role: {workspace.role}
                   </p>
@@ -58,7 +82,7 @@ const WorkspaceSelectionPage: React.FC = () => {
                     Joined: {new Date(workspace.joinedAt).toLocaleDateString()}
                   </p>
                 </div>
-                <div className="flex items-center">
+                <div className="flex items-center space-x-2">
                   <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
                     workspace.role === 'editor' 
                       ? 'bg-green-100 text-green-800' 
@@ -66,6 +90,11 @@ const WorkspaceSelectionPage: React.FC = () => {
                   }`}>
                     {workspace.role}
                   </span>
+                  {isAdminSelectingWorkspace && (
+                    <div className="text-right">
+                      <p className="text-xs text-blue-600 font-medium">Click to view</p>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
