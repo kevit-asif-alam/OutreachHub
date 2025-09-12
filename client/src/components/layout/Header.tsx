@@ -1,12 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
-import {
-  UserIcon,
-  ArrowRightOnRectangleIcon,
-  BellIcon,
-  CogIcon,
-} from "@heroicons/react/24/outline";
+import { ArrowRightIcon, BellIcon, UserIcon } from "@heroicons/react/24/outline";
 
 interface HeaderProps {
   title: string;
@@ -38,7 +33,7 @@ const ProfileMenu: React.FC<{
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen((o) => !o)}
-        className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100 transition-colors"
+        className="flex items-center space-x-3 p-2 rounded-lg hover:bg-purple-200 transition-colors"
       >
         <div className="w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center font-semibold text-sm">
           {initial}
@@ -50,10 +45,9 @@ const ProfileMenu: React.FC<{
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-2 w-56 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+        <div className="backdrop-blur absolute right-0 mt-2 w-56 bg-purple-200 border border-gray-200 rounded-lg shadow-lg z-50">
           <div className="p-3 border-b border-gray-100">
             <p className="text-sm font-medium text-gray-900">{userEmail}</p>
-            <p className="text-xs text-gray-500">Regular User</p>
           </div>
 
           <div className="py-1">
@@ -62,10 +56,10 @@ const ProfileMenu: React.FC<{
                 setOpen(false);
                 onProfile();
               }}
-              className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+              className="w-full flex items-center px-4 py-2 text-sm text-black-700 hover:bg-red-400 transition-colors"
             >
-              <CogIcon className="h-4 w-4 mr-3" />
-              Profile Settings
+              <UserIcon className="h-4 w-4 mr-3" />
+              Profile
             </button>
 
             <button
@@ -73,10 +67,10 @@ const ProfileMenu: React.FC<{
                 setOpen(false);
                 onLogout();
               }}
-              className="w-full flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+              className="w-full flex items-center px-4 py-2 text-sm text-black-600 hover:bg-red-400 transition-colors"
             >
-              <ArrowRightOnRectangleIcon className="h-4 w-4 mr-3" />
-              Sign Out
+              <ArrowRightIcon className="h-4 w-4 mr-3" />
+              Log Out
             </button>
           </div>
         </div>
@@ -99,14 +93,14 @@ const Header: React.FC<HeaderProps> = ({
   };
 
   return (
-    <header className="bg-white border-b border-gray-200 sticky top-0 z-40">
+    <header className="border-b border-black-200 sticky top-0 z-40">
       <div className="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
         {/* Left side */}
         <div className="flex items-center space-x-4">
           {showSidebarToggle && onSidebarToggle && (
             <button
               onClick={onSidebarToggle}
-              className="p-2 rounded-lg hover:bg-gray-100 transition-colors lg:hidden"
+              className="p-2 rounded-lg hover:bg-purple-200 transition-colors lg:hidden"
               title="Toggle sidebar"
             >
               <svg
@@ -126,9 +120,9 @@ const Header: React.FC<HeaderProps> = ({
           )}
 
           <div>
-            <h1 className="text-xl font-semibold text-gray-900">{title}</h1>
+            <h1 className="text-xl font-semibold text-black-900">{title}</h1>
             {currentWorkspace && (
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-black-500">
                 {currentWorkspace.name || "Workspace"} (
                 {currentWorkspace.workspaceId.slice(-8)})
               </p>
@@ -138,12 +132,6 @@ const Header: React.FC<HeaderProps> = ({
 
         {/* Right side */}
         <div className="flex items-center space-x-4">
-          {/* Notifications */}
-          <button className="p-2 rounded-lg hover:bg-gray-100 transition-colors relative">
-            <BellIcon className="h-5 w-5 text-gray-600" />
-            {/* Notification dot */}
-            <span className="absolute top-1 right-1 h-2 w-2 bg-red-500 rounded-full"></span>
-          </button>
 
           {/* Profile Menu */}
           <ProfileMenu

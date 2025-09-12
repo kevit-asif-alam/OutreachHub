@@ -94,7 +94,7 @@ const Layout: React.FC<LayoutProps> = ({ children, title, isAdmin = false }) => 
   // For admin pages, use the old layout
   if (isAdmin) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-100">
         {/* Admin Workspace View Indicator */}
         {isAdminViewingUserWorkspace && (
           <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-200">
@@ -152,7 +152,7 @@ const Layout: React.FC<LayoutProps> = ({ children, title, isAdmin = false }) => 
               <div className="flex items-center space-x-4">
                 <button
                   onClick={handleLogout}
-                  className="bg-gray-100 text-gray-700 px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-200 transition-colors"
+                  className="bg-purple-600 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-red-700 transition-colors"
                 >
                   Logout
                 </button>
@@ -180,7 +180,7 @@ const Layout: React.FC<LayoutProps> = ({ children, title, isAdmin = false }) => 
 
   // For user pages, use the new sidebar layout
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-gray-100 flex">
       {/* Desktop Sidebar */}
       <div className="hidden lg:flex">
         <Sidebar isCollapsed={sidebarCollapsed} onToggle={toggleSidebar} />
