@@ -46,6 +46,13 @@ export class Campaign {
   @Prop({ type: Date })
   completedAt?: Date;
 
+  // Scheduled window
+  @Prop({ type: Date, required: true })
+  startDate: Date;
+
+  @Prop({ type: Date, required: true })
+  endDate: Date;
+
   @Prop({ type: Date })
   deletedAt?: Date;
 
@@ -71,6 +78,8 @@ CampaignSchema.index({ status: 1 });
 CampaignSchema.index({ targetTags: 1 });
 CampaignSchema.index({ name: 'text', description: 'text' });
 CampaignSchema.index({ launchedAt: 1 });
+CampaignSchema.index({ startDate: 1 });
+CampaignSchema.index({ endDate: 1 });
 
 // Soft delete support
 CampaignSchema.pre('find', function() {

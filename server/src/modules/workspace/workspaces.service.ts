@@ -256,4 +256,83 @@ export class WorkspacesService {
     await this.ensureOwned(workspaceId, adminId);
     return this.revokeWorkspaceAccess(userId, workspaceId);
   }
+
+  async updateUserRole(userId: string, workspaceId: string, role: 'editor' | 'viewer') {
+    const ws = await this.workspaceModel.findById(workspaceId);
+    if (!ws) throw new NotFoundException('Workspace not found');
+
+    const idx = ws.members.findIndex(m => m.userId.toString() === userId);
+    if (idx === -1) throw new NotFoundException('User not a member of this workspace');
+
+    ws.members[idx].role = role as any;
+    await ws.save();
+
+    await this.userModel.updateOne(
+      { _id: new Types.ObjectId(userId), 'workspaces.workspaceId': new Types.ObjectId(workspaceId) },
+      { $set: { 'workspaces.$.role': role as any } }
+    );
+
+    return { success: true };
+  }
+
+  async updateUserRoleOwned(userId: string, workspaceId: string, role: 'editor' | 'viewer', adminId: string) {
+    await this.ensureOwned(workspaceId, adminId);
+    return this.updateUserRole(userId, workspaceId, role);
+  }
+
+  async updateUserDetails(
+    userId: string,
+    workspaceId: string,
+    body: { role?: 'editor' | 'viewer'; email?: string; tempPassword?: string }
+  ) {
+    const ws = await this.workspaceModel.findById(workspaceId);
+    if (!ws) throw new NotFoundException('Workspace not found');
+
+    const memberIdx = ws.members.findIndex(m => m.userId.toString() === userId);
+    if (memberIdx === -1) throw new NotFoundException('User not a member of this workspace');
+
+    const user = await this.userModel.findById(userId);
+    if (!user) throw new NotFoundException('User not found');
+
+    // Update email if provided and unique
+    if (body.email && body.email.toLowerCase() !== user.email.toLowerCase()) {
+      const existing = await this.userModel.findOne({ email: body.email.toLowerCase() });
+      if (existing && existing._id.toString() !== userId) {
+        throw new ConflictException('Email already in use');
+      }
+      user.email = body.email.toLowerCase();
+    }
+
+    // Update password if provided and >= 8
+    if (body.tempPassword && body.tempPassword.length > 0) {
+      if (body.tempPassword.length < 8) {
+        throw new BadRequestException('Temporary password must be at least 8 characters long');
+      }
+      user.passwordHash = await bcrypt.hash(body.tempPassword, 10);
+    }
+
+    // Update role if provided
+    if (body.role) {
+      ws.members[memberIdx].role = body.role as any;
+      await this.userModel.updateOne(
+        { _id: new Types.ObjectId(userId), 'workspaces.workspaceId': new Types.ObjectId(workspaceId) },
+        { $set: { 'workspaces.$.role': body.role as any } }
+      );
+    }
+
+    await user.save();
+    await ws.save();
+
+    return { success: true };
+  }
+
+  async updateUserDetailsOwned(
+    userId: string,
+    workspaceId: string,
+    body: { role?: 'editor' | 'viewer'; email?: string; tempPassword?: string },
+    adminId: string,
+  ) {
+    await this.ensureOwned(workspaceId, adminId);
+    return this.updateUserDetails(userId, workspaceId, body);
+  }
 }

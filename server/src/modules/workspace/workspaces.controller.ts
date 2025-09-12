@@ -93,4 +93,14 @@ export class WorkspacesController {
 
     return this.service.revokeWorkspaceAccessOwned(userId, workspaceId, req.user.sub);
   }
+
+  @Patch(':id/users/:userId')
+  async updateWorkspaceUser(
+    @Param('id') workspaceId: string,
+    @Param('userId') userId: string,
+    @Body() body: { role?: 'editor' | 'viewer'; email?: string; tempPassword?: string },
+    @Req() req: any,
+  ) {
+    return this.service.updateUserDetailsOwned(userId, workspaceId, body, req.user.sub);
+  }
 }
