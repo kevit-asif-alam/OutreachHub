@@ -86,6 +86,18 @@ export class CampaignsController {
     return this.service.launch(id, req.user.workspaceId);
   }
 
+  @Post(':id/stop')
+  @WorkspaceRoles(UserRole.EDITOR)
+  async stop(@Param('id') id: string, @Req() req) {
+    return this.service.stop(id, req.user.workspaceId);
+  }
+
+  @Post(':id/complete')
+  @WorkspaceRoles(UserRole.EDITOR)
+  async complete(@Param('id') id: string, @Req() req) {
+    return this.service.complete(id, req.user.workspaceId);
+  }
+
   @Post(':id/copy')
   @WorkspaceRoles(UserRole.EDITOR)
   async copy(@Param('id') id: string, @Req() req) {

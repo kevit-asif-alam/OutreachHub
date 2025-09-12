@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsOptional, IsArray, IsMongoId, MinLength, MaxLength } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsArray, IsMongoId, MinLength, MaxLength, IsDateString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateCampaignDto {
@@ -40,6 +40,20 @@ export class CreateCampaignDto {
   })
   @IsMongoId()
   templateId: string;
+
+  @ApiProperty({
+    description: 'Scheduled start date (ISO string)',
+    example: '2025-09-10T09:00:00.000Z',
+  })
+  @IsDateString()
+  startDate: string;
+
+  @ApiProperty({
+    description: 'Scheduled end date (ISO string)',
+    example: '2025-09-12T18:00:00.000Z',
+  })
+  @IsDateString()
+  endDate: string;
 }
 
 

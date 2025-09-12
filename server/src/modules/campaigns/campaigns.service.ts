@@ -34,11 +34,29 @@ export class CampaignsService {
       throw new NotFoundException('Message template not found');
     }
 
+    // Validate dates
+    const startDate = new Date(dto.startDate);
+    const endDate = new Date(dto.endDate);
+    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+      throw new BadRequestException('Invalid startDate or endDate');
+    }
+    if (endDate <= startDate) {
+      throw new BadRequestException('endDate must be after startDate');
+    }
+
+    // Pre-calculate contacts matching tags for initial totals (messages still 0 until launch)
+    const contacts = await this.contactsService.findByTags(dto.workspaceId, dto.targetTags || []);
+
     const campaign = await this.campaignModel.create({
       ...dto,
       templateId: new Types.ObjectId(dto.templateId),
       workspaceId: new Types.ObjectId(dto.workspaceId),
       createdBy: new Types.ObjectId(dto.createdBy),
+      startDate,
+      endDate,
+      totalContacts: contacts.length,
+      messagesSent: 0,
+      messagesFailed: 0,
     });
 
     return campaign;
@@ -121,15 +139,44 @@ export class CampaignsService {
       }
     }
 
-    return this.campaignModel.findByIdAndUpdate(
-      id,
-      {
-        ...dto,
-        templateId: dto.templateId ? new Types.ObjectId(dto.templateId) : undefined,
-        updatedBy: new Types.ObjectId(updatedBy),
-      },
-      { new: true }
-    );
+    // Handle startDate/endDate updates with validation
+    let nextStart: Date | undefined;
+    let nextEnd: Date | undefined;
+
+    if ((dto as any).startDate !== undefined) {
+      const parsed = new Date((dto as any).startDate as any);
+      if (isNaN(parsed.getTime())) {
+        throw new BadRequestException('Invalid startDate');
+      }
+      nextStart = parsed;
+    } else {
+      nextStart = campaign.startDate;
+    }
+
+    if ((dto as any).endDate !== undefined) {
+      const parsed = new Date((dto as any).endDate as any);
+      if (isNaN(parsed.getTime())) {
+        throw new BadRequestException('Invalid endDate');
+      }
+      nextEnd = parsed;
+    } else {
+      nextEnd = campaign.endDate;
+    }
+
+    if (nextStart && nextEnd && nextEnd <= nextStart) {
+      throw new BadRequestException('endDate must be after startDate');
+    }
+
+    const updateDoc: any = {
+      ...dto,
+      templateId: dto.templateId ? new Types.ObjectId(dto.templateId) : undefined,
+      updatedBy: new Types.ObjectId(updatedBy),
+    };
+
+    if ((dto as any).startDate !== undefined) updateDoc.startDate = nextStart;
+    if ((dto as any).endDate !== undefined) updateDoc.endDate = nextEnd;
+
+    return this.campaignModel.findByIdAndUpdate(id, updateDoc, { new: true });
   }
 
   async remove(id: string, workspaceId: string) {
@@ -188,10 +235,12 @@ export class CampaignsService {
       throw new NotFoundException('Campaign not found');
     }
 
-    // Only allow launching draft campaigns
-    if (campaign.status !== CampaignStatus.DRAFT) {
-      throw new BadRequestException('Only draft campaigns can be launched');
+    // Allow launching draft or completed (relaunch)
+    if (![CampaignStatus.DRAFT, CampaignStatus.COMPLETED].includes(campaign.status)) {
+      throw new BadRequestException('Only draft or completed campaigns can be launched');
     }
+
+    // Allow launching at any time (per requirement). The campaign will auto-complete after endDate in getCampaignStatus.
 
     // Get template details
     const template = await this.messageTemplatesService.findOne(
@@ -208,6 +257,16 @@ export class CampaignsService {
 
     if (contacts.length === 0) {
       throw new BadRequestException('No contacts found with the specified tags');
+    }
+
+    // On relaunch, clear previous messages and counters
+    if (campaign.status === CampaignStatus.COMPLETED) {
+      await this.campaignMessageModel.deleteMany({ campaignId: new Types.ObjectId(id) });
+      await this.campaignModel.findByIdAndUpdate(id, {
+        messagesSent: 0,
+        messagesFailed: 0,
+        completedAt: null,
+      });
     }
 
     // Update campaign status to running
@@ -246,6 +305,50 @@ export class CampaignsService {
     };
   }
 
+  async stop(id: string, workspaceId: string) {
+    const campaign = await this.campaignModel.findOne({
+      _id: new Types.ObjectId(id),
+      workspaceId: new Types.ObjectId(workspaceId),
+    });
+
+    if (!campaign) {
+      throw new NotFoundException('Campaign not found');
+    }
+
+    if (campaign.status !== CampaignStatus.RUNNING) {
+      throw new BadRequestException('Only running campaigns can be stopped');
+    }
+
+    await this.campaignModel.findByIdAndUpdate(id, {
+      status: CampaignStatus.COMPLETED,
+      completedAt: new Date(),
+    });
+
+    return { message: 'Campaign stopped' };
+  }
+
+  async complete(id: string, workspaceId: string) {
+    const campaign = await this.campaignModel.findOne({
+      _id: new Types.ObjectId(id),
+      workspaceId: new Types.ObjectId(workspaceId),
+    });
+
+    if (!campaign) {
+      throw new NotFoundException('Campaign not found');
+    }
+
+    if (campaign.status !== CampaignStatus.RUNNING) {
+      throw new BadRequestException('Only running campaigns can be completed');
+    }
+
+    await this.campaignModel.findByIdAndUpdate(id, {
+      status: CampaignStatus.COMPLETED,
+      completedAt: new Date(),
+    });
+
+    return { message: 'Campaign completed' };
+  }
+
   private processTemplate(content: string, contact: any): string {
     return content
       .replace(/\{\{firstName\}\}/g, contact.firstName)
@@ -260,6 +363,11 @@ export class CampaignsService {
     const delay = 1000; // 1 second delay between batches
 
     for (let i = 0; i < totalMessages; i += batchSize) {
+      // Bail out early if campaign has been stopped/completed
+      const current = await this.campaignModel.findById(campaignId).lean();
+      if (!current || current.status !== CampaignStatus.RUNNING) {
+        break;
+      }
       const batch = await this.campaignMessageModel
         .find({ campaignId: new Types.ObjectId(campaignId), status: MessageStatus.PENDING })
         .limit(batchSize);
@@ -298,11 +406,7 @@ export class CampaignsService {
       }
     }
 
-    // Mark campaign as completed
-    await this.campaignModel.findByIdAndUpdate(campaignId, {
-      status: CampaignStatus.COMPLETED,
-      completedAt: new Date(),
-    });
+    // Do not auto-complete here; completion will be determined by endDate in getCampaignStatus
   }
 
   async getCampaignStatus(id: string, workspaceId: string) {
@@ -331,6 +435,16 @@ export class CampaignsService {
         status: MessageStatus.FAILED,
       }),
     ]);
+
+    // If campaign is running and endDate has passed, mark completed now
+    if (campaign.status === CampaignStatus.RUNNING && campaign.endDate && new Date(campaign.endDate) <= new Date()) {
+      await this.campaignModel.findByIdAndUpdate(id, {
+        status: CampaignStatus.COMPLETED,
+        completedAt: new Date(),
+      });
+      campaign.status = CampaignStatus.COMPLETED;
+      campaign.completedAt = new Date();
+    }
 
     return {
       ...campaign,
