@@ -3,8 +3,8 @@ import type { ReactNode } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { ArrowLeftIcon, ShieldCheckIcon } from '@heroicons/react/24/outline';
-import Sidebar from './Sidebar/Sidebar';
-import Header from './Header/Header';
+import Sidebar from './Sidebar';
+import Header from './Header';
 
 interface LayoutProps {
   children: ReactNode;

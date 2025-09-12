@@ -1,12 +1,12 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { useAuth } from '../../../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
-import { 
-  UserIcon, 
+import React, { useEffect, useRef, useState } from "react";
+import { useAuth } from "../../contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
+import {
+  UserIcon,
   ArrowRightOnRectangleIcon,
   BellIcon,
-  CogIcon
-} from '@heroicons/react/24/outline';
+  CogIcon,
+} from "@heroicons/react/24/outline";
 
 interface HeaderProps {
   title: string;
@@ -14,11 +14,11 @@ interface HeaderProps {
   onSidebarToggle?: () => void;
 }
 
-const ProfileMenu: React.FC<{ userEmail: string; onProfile: () => void; onLogout: () => void }> = ({ 
-  userEmail, 
-  onProfile, 
-  onLogout 
-}) => {
+const ProfileMenu: React.FC<{
+  userEmail: string;
+  onProfile: () => void;
+  onLogout: () => void;
+}> = ({ userEmail, onProfile, onLogout }) => {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement | null>(null);
 
@@ -28,11 +28,11 @@ const ProfileMenu: React.FC<{ userEmail: string; onProfile: () => void; onLogout
         setOpen(false);
       }
     };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  const initial = (userEmail || 'U').charAt(0).toUpperCase();
+  const initial = (userEmail || "U").charAt(0).toUpperCase();
 
   return (
     <div className="relative" ref={ref}>
@@ -48,25 +48,31 @@ const ProfileMenu: React.FC<{ userEmail: string; onProfile: () => void; onLogout
           <p className="text-xs text-gray-500">User</p>
         </div>
       </button>
-      
+
       {open && (
         <div className="absolute right-0 mt-2 w-56 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
           <div className="p-3 border-b border-gray-100">
             <p className="text-sm font-medium text-gray-900">{userEmail}</p>
             <p className="text-xs text-gray-500">Regular User</p>
           </div>
-          
+
           <div className="py-1">
             <button
-              onClick={() => { setOpen(false); onProfile(); }}
+              onClick={() => {
+                setOpen(false);
+                onProfile();
+              }}
               className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
             >
               <CogIcon className="h-4 w-4 mr-3" />
               Profile Settings
             </button>
-            
+
             <button
-              onClick={() => { setOpen(false); onLogout(); }}
+              onClick={() => {
+                setOpen(false);
+                onLogout();
+              }}
               className="w-full flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
             >
               <ArrowRightOnRectangleIcon className="h-4 w-4 mr-3" />
@@ -79,17 +85,17 @@ const ProfileMenu: React.FC<{ userEmail: string; onProfile: () => void; onLogout
   );
 };
 
-const Header: React.FC<HeaderProps> = ({ 
-  title, 
-  showSidebarToggle = false, 
-  onSidebarToggle 
+const Header: React.FC<HeaderProps> = ({
+  title,
+  showSidebarToggle = false,
+  onSidebarToggle,
 }) => {
   const { user, logout, currentWorkspace } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
     await logout();
-    navigate('/');
+    navigate("/");
   };
 
   return (
@@ -103,17 +109,28 @@ const Header: React.FC<HeaderProps> = ({
               className="p-2 rounded-lg hover:bg-gray-100 transition-colors lg:hidden"
               title="Toggle sidebar"
             >
-              <svg className="h-6 w-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              <svg
+                className="h-6 w-6 text-gray-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 6h16M4 12h16M4 18h16"
+                />
               </svg>
             </button>
           )}
-          
+
           <div>
             <h1 className="text-xl font-semibold text-gray-900">{title}</h1>
             {currentWorkspace && (
               <p className="text-sm text-gray-500">
-                {currentWorkspace.name || 'Workspace'} ({currentWorkspace.workspaceId.slice(-8)})
+                {currentWorkspace.name || "Workspace"} (
+                {currentWorkspace.workspaceId.slice(-8)})
               </p>
             )}
           </div>
@@ -129,10 +146,10 @@ const Header: React.FC<HeaderProps> = ({
           </button>
 
           {/* Profile Menu */}
-          <ProfileMenu 
-            userEmail={user?.email || ''} 
-            onLogout={handleLogout} 
-            onProfile={() => navigate('/profile')} 
+          <ProfileMenu
+            userEmail={user?.email || ""}
+            onLogout={handleLogout}
+            onProfile={() => navigate("/profile")}
           />
         </div>
       </div>
