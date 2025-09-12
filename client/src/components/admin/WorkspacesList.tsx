@@ -1,20 +1,25 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { workspacesService } from '../../services/workspaces';
-import { PlusIcon, UsersIcon, CalendarIcon } from '@heroicons/react/24/outline';
+import React, { useState } from "react";
+import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { workspacesService } from "../../services/workspaces";
+import { PlusIcon, UsersIcon, CalendarIcon } from "@heroicons/react/24/outline";
 
 const WorkspacesList: React.FC = () => {
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
 
-  const { data: workspaces, isLoading, error } = useQuery({
-    queryKey: ['workspaces'],
+  const {
+    data: workspaces,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ["workspaces"],
     queryFn: workspacesService.getAll,
   });
 
-  const filteredWorkspaces = workspaces?.filter(workspace =>
-    workspace.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    workspace.description?.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredWorkspaces = workspaces?.filter(
+    (workspace) =>
+      workspace.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      workspace.description?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   if (isLoading) {
@@ -28,7 +33,9 @@ const WorkspacesList: React.FC = () => {
   if (error) {
     return (
       <div className="bg-red-50 border border-red-200 rounded-md p-4">
-        <div className="text-red-800">Error loading workspaces. Please try again.</div>
+        <div className="text-red-800">
+          Error loading workspaces. Please try again.
+        </div>
       </div>
     );
   }
@@ -39,7 +46,9 @@ const WorkspacesList: React.FC = () => {
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Workspaces</h2>
-          <p className="text-gray-600">Manage your business workspaces and users</p>
+          <p className="text-gray-600">
+            Manage your business workspaces and users
+          </p>
         </div>
         <Link
           to="/admin/workspaces/create"
@@ -65,7 +74,10 @@ const WorkspacesList: React.FC = () => {
       {filteredWorkspaces && filteredWorkspaces.length > 0 ? (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {filteredWorkspaces.map((workspace) => (
-            <div key={workspace._id} className="bg-white rounded-lg shadow-md border border-gray-200 hover:shadow-lg transition-shadow">
+            <div
+              key={workspace._id}
+              className="bg-white rounded-lg shadow-md border border-gray-200 hover:shadow-lg transition-shadow"
+            >
               <div className="p-6">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
@@ -87,7 +99,9 @@ const WorkspacesList: React.FC = () => {
                   </div>
                   <div className="flex items-center space-x-1">
                     <CalendarIcon className="icon-sm" />
-                    <span>{new Date(workspace.createdAt).toLocaleDateString()}</span>
+                    <span>
+                      {new Date(workspace.createdAt).toLocaleDateString()}
+                    </span>
                   </div>
                 </div>
 
@@ -106,7 +120,9 @@ const WorkspacesList: React.FC = () => {
       ) : (
         <div className="text-center py-12">
           <div className="text-gray-500">
-            {searchTerm ? 'No workspaces found matching your search.' : 'No workspaces created yet.'}
+            {searchTerm
+              ? "No workspaces found matching your search."
+              : "No workspaces created yet."}
           </div>
           {!searchTerm && (
             <Link
