@@ -199,7 +199,7 @@ const ContactsPage: React.FC = () => {
                     <div className="bg-red-50 border border-red-200 rounded-md p-3 text-sm text-red-800">{errorMsg}</div>
                   )}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">First Name</label>
+                    <label className="block text-left text-sm font-medium text-gray-700 mb-1">First Name</label>
                     <input
                       type="text"
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -209,7 +209,7 @@ const ContactsPage: React.FC = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
+                    <label className="block text-left text-sm font-medium text-gray-700 mb-1">Last Name</label>
                     <input
                       type="text"
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -219,7 +219,7 @@ const ContactsPage: React.FC = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                    <label className="block text-left text-sm font-medium text-gray-700 mb-1">Phone Number</label>
                     <input
                       type="tel"
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -229,7 +229,7 @@ const ContactsPage: React.FC = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Email (Optional)</label>
+                    <label className="block text-left text-sm font-medium text-gray-700 mb-1">Email (Optional)</label>
                     <input
                       type="email"
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -238,7 +238,7 @@ const ContactsPage: React.FC = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Tags (comma-separated)</label>
+                    <label className="block text-left text-sm font-medium text-gray-700 mb-1">Tags (comma-separated)</label>
                     <input
                       type="text"
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -452,7 +452,7 @@ const ContactsPage: React.FC = () => {
                 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-left text-sm font-medium text-gray-700 mb-2">
                       First Name <span className="text-red-500">*</span>
                     </label>
                     <input
@@ -480,7 +480,7 @@ const ContactsPage: React.FC = () => {
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-left text-sm font-medium text-gray-700 mb-2">
                       Last Name <span className="text-red-500">*</span>
                     </label>
                     <input
@@ -509,7 +509,7 @@ const ContactsPage: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-left text-sm font-medium text-gray-700 mb-2">
                     Phone Number <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -537,7 +537,7 @@ const ContactsPage: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-left text-sm font-medium text-gray-700 mb-2">
                     Email Address
                   </label>
                   <input
@@ -565,7 +565,7 @@ const ContactsPage: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-left text-sm font-medium text-gray-700 mb-2">
                     Tags
                   </label>
                   <input
@@ -575,7 +575,7 @@ const ContactsPage: React.FC = () => {
                     value={form.tags}
                     onChange={(e) => setForm({ ...form, tags: e.target.value })}
                   />
-                  <p className="mt-1 text-xs text-gray-500">Separate multiple tags with commas</p>
+                  {/* <p className="mt-1 text-xs text-gray-500">Separate multiple tags with commas</p> */}
                 </div>
 
                 <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200">

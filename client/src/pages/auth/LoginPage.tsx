@@ -179,10 +179,10 @@ const LoginPage: React.FC = () => {
         </div>
 
         {showRegister ? (
-          <form className="mt-8 space-y-6" onSubmit={handleRegister}>
+          <form className="mt-8 space-y-6 border border-black rounded-lg p-4" onSubmit={handleRegister}>
             <div className="space-y-4">
               <div>
-                <label htmlFor="register-email" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="register-email" className="block text-left text-sm font-medium text-gray-700 mb-2">
                   Email Address
                 </label>
                 <input
@@ -198,7 +198,7 @@ const LoginPage: React.FC = () => {
                 />
               </div>
               <div>
-                <label htmlFor="register-password" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="register-password" className="block text-left text-sm font-medium text-gray-700 mb-2">
                   Password
                 </label>
                 <input
@@ -214,7 +214,7 @@ const LoginPage: React.FC = () => {
                 />
               </div>
               <div>
-                <label htmlFor="confirm-password" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="confirm-password" className="block text-left text-sm font-medium text-gray-700 mb-2">
                   Confirm Password
                 </label>
                 <input
@@ -263,10 +263,10 @@ const LoginPage: React.FC = () => {
             </div>
           </form>
         ) : (
-          <form className="mt-8 space-y-6" onSubmit={handleLogin}>
+          <form className="mt-8 space-y-6 border border-black rounded-lg p-4" onSubmit={handleLogin}>
             <div className="space-y-4">
               <div>
-                <label htmlFor="email-address" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="email-address" className="block text-left text-sm font-medium text-gray-700 mb-2">
                   Email Address
                 </label>
                 <input
@@ -297,7 +297,7 @@ const LoginPage: React.FC = () => {
                 )}
               </div>
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="password" className="block text-left text-sm font-medium text-gray-700 mb-2">
                   Password
                 </label>
                 <input

@@ -277,17 +277,17 @@ const CampaignsPage: React.FC = () => {
 
         {/* Campaigns List */}
         {campaignsData && campaignsData.campaigns.length > 0 ? (
-          <div className="space-y-4">
+          <div className="space-y-8">
             {campaignsData.campaigns.map((campaign) => (
               <div key={campaign._id} className="bg-white rounded-lg shadow-md border border-gray-200 hover:shadow-lg transition-shadow">
                 <div className="p-6">
-                  <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-start mb-4">
                     <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-2">{campaign.name}</h3>
+                      <h3 className="text-lg font-semibold text-left text-gray-900 mb-2">{campaign.name}</h3>
                       {campaign.description && (
-                        <p className="text-gray-600 text-sm mb-2">{campaign.description}</p>
+                        <p className="text-gray-600 text-left text-sm mb-2">{campaign.description}</p>
                       )}
-                      <div className="text-xs text-gray-500">
+                      <div className="text-xs text-left text-gray-500">
                         Template: <span className="font-medium text-gray-700">{resolveTemplateName(campaign)}</span>
                       </div>
                     </div>

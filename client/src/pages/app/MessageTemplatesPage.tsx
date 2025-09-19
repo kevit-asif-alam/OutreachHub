@@ -229,7 +229,7 @@ const MessageTemplatesPage: React.FC = () => {
                 )}
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-left text-sm font-medium text-gray-700 mb-2">
                     Template Name <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -243,7 +243,7 @@ const MessageTemplatesPage: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-left text-sm font-medium text-gray-700 mb-2">
                     Template Type
                   </label>
                   <select
@@ -257,7 +257,7 @@ const MessageTemplatesPage: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-left text-sm font-medium text-gray-700 mb-2">
                     Message Content <span className="text-red-500">*</span>
                   </label>
                   <textarea
@@ -274,7 +274,7 @@ const MessageTemplatesPage: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-left text-sm font-medium text-gray-700 mb-2">
                     Image URL
                     {form.type === 'text_and_image' && <span className="text-red-500"> *</span>}
                   </label>

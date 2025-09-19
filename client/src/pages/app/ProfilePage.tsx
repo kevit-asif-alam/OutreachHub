@@ -20,7 +20,7 @@ const ProfilePage: React.FC = () => {
 
   return (
     <Layout title="Profile">
-      <div className="max-w-4xl mx-auto space-y-6">
+      <div className="max-w-7xl mx-auto space-y-6">
         {/* Profile Header */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="flex items-center space-x-6">
@@ -62,11 +62,11 @@ const ProfilePage: React.FC = () => {
             
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-left text-sm font-medium text-gray-700 mb-2">
                   Email Address
                 </label>
                 <div className="flex items-center space-x-3">
-                  <EnvelopeIcon className="h-5 w-5 text-gray-400" />
+                  {/* <EnvelopeIcon className="h-5 w-5 text-gray-400" /> */}
                   <input
                     type="email"
                     value={formData.email}
@@ -79,7 +79,7 @@ const ProfilePage: React.FC = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-left text-sm font-medium text-gray-700 mb-2">
                     First Name
                   </label>
                   <input
@@ -92,7 +92,7 @@ const ProfilePage: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-left text-sm font-medium text-gray-700 mb-2">
                     Last Name
                   </label>
                   <input
@@ -107,7 +107,7 @@ const ProfilePage: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-left text-sm font-medium text-gray-700 mb-2">
                   Phone Number
                 </label>
                 <input
@@ -159,19 +159,19 @@ const ProfilePage: React.FC = () => {
               </div>
 
               <div className="p-4 bg-gray-50 rounded-lg">
-                <p className="font-medium text-gray-900 mb-1">Workspace ID</p>
-                <p className="text-sm text-gray-600 font-mono">{currentWorkspace?.workspaceId}</p>
+                <p className="font-medium text-left text-gray-900 mb-1">Workspace ID</p>
+                <p className="text-sm text-left text-gray-600 font-mono">{currentWorkspace?.workspaceId}</p>
               </div>
 
               <div className="p-4 bg-gray-50 rounded-lg">
-                <p className="font-medium text-gray-900 mb-1">Joined Date</p>
-                <p className="text-sm text-gray-600">
+                <p className="font-medium text-left text-gray-900 mb-1">Joined Date</p>
+                <p className="text-sm text-left text-gray-600">
                   {currentWorkspace?.joinedAt ? new Date(currentWorkspace.joinedAt).toLocaleDateString() : 'N/A'}
                 </p>
               </div>
             </div>
 
-            <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            {/* <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
               <h4 className="font-medium text-blue-900 mb-2">Need to switch workspaces?</h4>
               <p className="text-sm text-blue-700 mb-3">
                 Contact your administrator to be added to additional workspaces or to change your role.
@@ -179,7 +179,7 @@ const ProfilePage: React.FC = () => {
               <button className="text-sm text-blue-600 hover:text-blue-800 font-medium">
                 Contact Administrator →
               </button>
-            </div>
+            </div> */}
           </div>
         </div>
 
