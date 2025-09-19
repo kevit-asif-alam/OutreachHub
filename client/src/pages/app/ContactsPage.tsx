@@ -55,7 +55,7 @@ const ContactsPage: React.FC = () => {
     if (!data.phoneNumber.trim()) {
       errors.phoneNumber = 'Phone number is required';
       hasErrors = true;
-    } else if (!/^[\+]?[1-9][\d]{0,15}$/.test(data.phoneNumber.replace(/[\s\-\(\)]/g, ''))) {
+    } else if (!/^\d{10}$/.test(data.phoneNumber.trim())) {
       errors.phoneNumber = 'Please enter a valid phone number';
       hasErrors = true;
     }
@@ -173,7 +173,7 @@ const ContactsPage: React.FC = () => {
         {/* Edit Contact Form Modal */}
         {showEditForm && !isViewer && (
           <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-            <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-purple-200">
               <div className="mt-3">
                 <h3 className="text-lg font-medium text-gray-900 mb-4">Edit Contact</h3>
                 <form
