@@ -93,7 +93,7 @@ const Header: React.FC<HeaderProps> = ({
   };
 
   return (
-    <header className="border-b border-black-200 sticky top-0 z-40">
+    <header className="bg-purple-100 border-b border-black-200 sticky top-0 z-40">
       <div className="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
         {/* Left side */}
         <div className="flex items-center space-x-4">
@@ -104,7 +104,7 @@ const Header: React.FC<HeaderProps> = ({
               title="Toggle sidebar"
             >
               <svg
-                className="h-6 w-6 text-gray-600"
+                className="h-6 w-6 text-gray-600 p-10"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"

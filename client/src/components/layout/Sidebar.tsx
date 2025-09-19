@@ -36,7 +36,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-gray-200">
         {!isCollapsed && (
-          <Link to="/dashboard" className="text-xl font-bold text-indigo-600">
+          <Link to="/dashboard" className="text-3xl font-bold text-indigo-600">
             OutreachHub
           </Link>
         )}
@@ -80,7 +80,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
             <Link
               key={item.name}
               to={item.href}
-              className={`group flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+              className={`group flex items-left px-5 py-3 text-sm font-medium rounded-lg transition-colors ${
                 isActive(item.href)
                   ? 'bg-indigo-100 text-indigo-700'
                   : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
