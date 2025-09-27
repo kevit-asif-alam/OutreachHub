@@ -25,13 +25,17 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
+    const valid = await bcrypt.compare(password, user.passwordHash);
+    if (!valid) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
     // For admin portal, user must be an admin
     if (isAdminPortal && !user.isAdmin) {
       throw new UnauthorizedException('Admin access required');
     }
 
-    const valid = await bcrypt.compare(password, user.passwordHash);
-    if (!valid) {
+    if (!isAdminPortal && user.isAdmin) {
       throw new UnauthorizedException('Invalid credentials');
     }
 

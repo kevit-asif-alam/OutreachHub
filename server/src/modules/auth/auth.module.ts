@@ -8,7 +8,9 @@ import { AuthService } from './auth.service';
 import { User, UserSchema } from './schemas/user.schema';
 import { Token, TokenSchema } from './schemas/token.schema';
 import { AppAuthController } from './app-auth.controller';
+import { GeneralAuthController } from './general-auth.controller';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { JwtValidationStrategy } from './strategies/jwt-validation.strategy';
 import { Workspace, WorkspaceSchema } from '../workspace/schemas/workspace.schema';
 
 @Module({
@@ -28,8 +30,8 @@ import { Workspace, WorkspaceSchema } from '../workspace/schemas/workspace.schem
       { name: Workspace.name, schema: WorkspaceSchema },
     ]),
   ],
-  controllers: [AdminAuthController, AppAuthController],
-  providers: [AuthService, JwtStrategy],
+  controllers: [AdminAuthController, AppAuthController, GeneralAuthController],
+  providers: [AuthService, JwtStrategy, JwtValidationStrategy],
   exports: [AuthService, JwtModule],
 })
 export class AuthModule {}

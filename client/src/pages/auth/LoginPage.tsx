@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { authService } from '../../services/auth';
 import { ExclamationTriangleIcon, CheckCircleIcon, InformationCircleIcon } from '@heroicons/react/24/outline';
+import toast from 'react-hot-toast';
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -105,7 +106,6 @@ const LoginPage: React.FC = () => {
 
     try {
       const result = await login(email, password, isAdmin);
-      setSuccessMessage('Login successful! Redirecting...');
       
       // Small delay to show success message
       setTimeout(() => {
@@ -129,7 +129,7 @@ const LoginPage: React.FC = () => {
     setError('');
 
     if (registerData.password !== registerData.confirmPassword) {
-      setError('Passwords do not match');
+      toast.error('Passwords do not match');
       setIsLoading(false);
       return;
     }
@@ -137,13 +137,17 @@ const LoginPage: React.FC = () => {
     try {
       // Create admin user
       await authService.adminRegister({ email: registerData.email, password: registerData.password });
+      toast.success('Admin account created successfully!');
+      
       // Immediately login as admin to establish session
       const result = await login(registerData.email, registerData.password, true);
       if (result === undefined) {
         navigate('/admin');
       }
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Registration failed. Please try again.');
+      const errorMessage = err.response?.data?.message || 'Registration failed. Please try again.';
+      toast.error(errorMessage);
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -374,22 +378,22 @@ const LoginPage: React.FC = () => {
                           </p>
                           {errorInfo.type === 'admin-access' && (
                             <div className="mt-3">
-                              <p className="text-xs text-red-600 mb-2">Next steps:</p>
+                              {/* <p className="text-xs text-red-600 mb-2">Next steps:</p> */}
                               <ul className="text-xs text-red-600 space-y-1">
-                                <li>• Uncheck "Login as Admin" if you're a regular user</li>
+                                {/* <li>• Uncheck "Login as Admin" if you're a regular user</li>
                                 <li>• Contact your administrator for admin access</li>
-                                <li>• Use different credentials if available</li>
+                                <li>• Use different credentials if available</li> */}
                               </ul>
                             </div>
                           )}
                           {errorInfo.type === 'invalid-credentials' && (
                             <div className="mt-3">
-                              <p className="text-xs text-red-600 mb-2">Troubleshooting tips:</p>
+                              {/* <p className="text-xs text-red-600 mb-2">Troubleshooting tips:</p>
                               <ul className="text-xs text-red-600 space-y-1">
                                 <li>• Check your email for typos</li>
                                 <li>• Ensure Caps Lock is off</li>
                                 <li>• Try resetting your password</li>
-                              </ul>
+                              </ul> */}
                             </div>
                           )}
                         </div>
