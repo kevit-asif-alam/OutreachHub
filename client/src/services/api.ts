@@ -30,7 +30,7 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       localStorage.removeItem('accessToken');
       localStorage.removeItem('user');
-      window.location.href = '/login';
+      localStorage.removeItem('currentWorkspace');
     }
     return Promise.reject(error);
   }

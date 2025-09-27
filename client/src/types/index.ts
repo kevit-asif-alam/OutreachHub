@@ -30,6 +30,7 @@ export interface AuthContextType {
   selectWorkspace: (workspace: Workspace) => Promise<void>;
   isAuthenticated: boolean;
   isAdmin: boolean;
+  isInitializing: boolean;
 }
 
 export interface Contact {
