@@ -22,8 +22,37 @@ const UserDashboard: React.FC = () => {
   });
 
   // Date filters for charts
+  const [dateRange, setDateRange] = useState<string>('all');
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
+
+  // Helper function to get date range based on selection
+  const getDateRange = (range: string) => {
+    const today = new Date();
+    const todayStr = today.toISOString().split('T')[0];
+    
+    switch (range) {
+      case 'today':
+        return { start: todayStr, end: todayStr };
+      case 'week':
+        const weekStart = new Date(today);
+        weekStart.setDate(today.getDate() - 7);
+        return { start: weekStart.toISOString().split('T')[0], end: todayStr };
+      case 'month':
+        const monthStart = new Date(today);
+        monthStart.setMonth(today.getMonth() - 1);
+        return { start: monthStart.toISOString().split('T')[0], end: todayStr };
+      default:
+        return { start: '', end: '' };
+    }
+  };
+
+  // Update date range when selection changes
+  React.useEffect(() => {
+    const { start, end } = getDateRange(dateRange);
+    setStartDate(start);
+    setEndDate(end);
+  }, [dateRange]);
 
   const { data: campaignsPerDay } = useQuery({
     queryKey: ['analytics', 'campaigns-per-day', startDate, endDate],
@@ -80,29 +109,27 @@ const UserDashboard: React.FC = () => {
           </p>
         </div>
       <div className="space-y-6">
-        {/* Date Filters */}
+        {/* Date Range Filter */}
         <div className="bg-white rounded-lg shadow p-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
-              <input
-                type="date"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
-              <input
-                type="date"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-              />
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Time Period</label>
+              <select
+                value={dateRange}
+                onChange={(e) => setDateRange(e.target.value)}
+                className="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+              >
+                <option value="all">All Time</option>
+                <option value="today">Today</option>
+                <option value="week">This Week</option>
+                <option value="month">This Month</option>
+              </select>
             </div>
             <div className="text-xs text-gray-500">
-              Leaving either empty will fetch data for full available range.
+              {dateRange === 'all' && 'Showing data for all available time periods'}
+              {dateRange === 'today' && 'Showing data for today only'}
+              {dateRange === 'week' && 'Showing data for the last 7 days'}
+              {dateRange === 'month' && 'Showing data for the last 30 days'}
             </div>
           </div>
         </div>
