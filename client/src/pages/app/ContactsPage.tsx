@@ -363,22 +363,53 @@ const ContactsPage: React.FC = () => {
             {/* Pagination */}
             {contactsData.pagination.pages > 1 && (
               <div className="px-6 py-4 border-t border-gray-200">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row items-center justify-between space-y-3 sm:space-y-0">
                   <div className="text-sm text-gray-700">
                     Showing {((page - 1) * 10) + 1} to {Math.min(page * 10, contactsData.pagination.total)} of {contactsData.pagination.total} results
                   </div>
-                  <div className="flex space-x-2">
+                  <div className="flex items-center space-x-2">
                     <button
                       onClick={() => setPage(page - 1)}
                       disabled={page === 1}
-                      className="px-3 py-1 border border-gray-300 rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                      className="px-3 py-1 border border-gray-300 rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
                     >
                       Previous
                     </button>
+                    
+                    {/* Page Numbers */}
+                    <div className="flex space-x-1">
+                      {Array.from({ length: Math.min(5, contactsData.pagination.pages) }, (_, i) => {
+                        let pageNum;
+                        if (contactsData.pagination.pages <= 5) {
+                          pageNum = i + 1;
+                        } else if (page <= 3) {
+                          pageNum = i + 1;
+                        } else if (page >= contactsData.pagination.pages - 2) {
+                          pageNum = contactsData.pagination.pages - 4 + i;
+                        } else {
+                          pageNum = page - 2 + i;
+                        }
+                        
+                        return (
+                          <button
+                            key={pageNum}
+                            onClick={() => setPage(pageNum)}
+                            className={`px-3 py-1 text-sm rounded-md transition-colors ${
+                              page === pageNum
+                                ? 'bg-indigo-600 text-white'
+                                : 'border border-gray-300 hover:bg-gray-50'
+                            }`}
+                          >
+                            {pageNum}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    
                     <button
                       onClick={() => setPage(page + 1)}
                       disabled={page === contactsData.pagination.pages}
-                      className="px-3 py-1 border border-gray-300 rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                      className="px-3 py-1 border border-gray-300 rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
                     >
                       Next
                     </button>
