@@ -72,33 +72,40 @@ const WorkspacesList: React.FC = () => {
 
       {/* Workspaces Grid */}
       {filteredWorkspaces && filteredWorkspaces.length > 0 ? (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
           {filteredWorkspaces.map((workspace) => (
             <div
               key={workspace._id}
               className="bg-white rounded-lg shadow-md border border-gray-200 hover:shadow-lg transition-shadow"
             >
-              <div className="p-6">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              <div className="p-4 sm:p-6">
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2 truncate">
                       {workspace.name}
                     </h3>
                     {workspace.description && (
-                      <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-                        {workspace.description}
-                      </p>
+                      <div className="relative">
+                        <p className="text-gray-600 text-sm mb-4 line-clamp-3 overflow-hidden">
+                          {workspace.description}
+                        </p>
+                        {workspace.description.length > 100 && (
+                          <div className="absolute bottom-0 right-0 bg-white pl-2 text-xs text-gray-400">
+                            ...
+                          </div>
+                        )}
+                      </div>
                     )}
                   </div>
                 </div>
 
-                <div className="flex items-center space-x-4 text-sm text-gray-500 mb-4">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 space-y-2 sm:space-y-0 text-sm text-gray-500 mb-4">
                   <div className="flex items-center space-x-1">
-                    <UsersIcon className="icon-sm" />
+                    <UsersIcon className="h-4 w-4" />
                     <span>{workspace.members.length} members</span>
                   </div>
                   <div className="flex items-center space-x-1">
-                    <CalendarIcon className="icon-sm" />
+                    <CalendarIcon className="h-4 w-4" />
                     <span>
                       {new Date(workspace.createdAt).toLocaleDateString()}
                     </span>
