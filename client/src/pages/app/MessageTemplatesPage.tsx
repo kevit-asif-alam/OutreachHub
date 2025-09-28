@@ -136,9 +136,16 @@ const MessageTemplatesPage: React.FC = () => {
                     </span>
                   </div>
                   
-                  <p className="text-gray-600 text-sm mb-4 line-clamp-3">
-                    {template.content}
-                  </p>
+                  <div className="relative">
+                    <p className="text-gray-600 text-sm mb-4 line-clamp-3 overflow-hidden">
+                      {template.content}
+                    </p>
+                    {template.content.length > 150 && (
+                      <div className="absolute bottom-0 right-0 bg-white pl-2 text-xs text-gray-400">
+                        ...
+                      </div>
+                    )}
+                  </div>
                   
                   {template.imageUrl && (
                     <div className="mb-4">
@@ -262,15 +269,16 @@ const MessageTemplatesPage: React.FC = () => {
                   </label>
                   <textarea
                     rows={5}
+                    maxLength={1000}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors resize-none"
                     placeholder="Enter your message template.."
                     value={form.content}
                     onChange={(e) => setForm({ ...form, content: e.target.value })}
                     required
                   />
-                  {/* <p className="mt-1 text-xs text-gray-500">
-                    Use placeholders like {'{{firstName}}'}, {'{{lastName}}'}, {'{{email}}'}, {'{{phoneNumber}}'} for personalization
-                  </p> */}
+                  <p className="mt-1 text-xs text-gray-500">
+                    {form.content.length}/1000 characters
+                  </p>
                 </div>
 
                 <div>

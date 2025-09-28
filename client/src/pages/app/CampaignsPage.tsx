@@ -282,16 +282,25 @@ const CampaignsPage: React.FC = () => {
               <div key={campaign._id} className="bg-white rounded-lg shadow-md border border-gray-200 hover:shadow-lg transition-shadow">
                 <div className="p-6">
                   <div className="flex items-start mb-4">
-                    <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-left text-gray-900 mb-2">{campaign.name}</h3>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-lg font-semibold text-left text-gray-900 mb-2 truncate">{campaign.name}</h3>
                       {campaign.description && (
-                        <p className="text-gray-600 text-left text-sm mb-2">{campaign.description}</p>
+                        <div className="relative">
+                          <p className="text-gray-600 text-left text-sm mb-2 line-clamp-2 overflow-hidden">
+                            {campaign.description}
+                          </p>
+                          {campaign.description.length > 100 && (
+                            <div className="absolute bottom-0 right-0 bg-white pl-2 text-xs text-gray-400">
+                              ...
+                            </div>
+                          )}
+                        </div>
                       )}
                       <div className="text-xs text-left text-gray-500">
                         Template: <span className="font-medium text-gray-700">{resolveTemplateName(campaign)}</span>
                       </div>
                     </div>
-                    <span className={`px-3 py-1 text-sm font-semibold rounded-full ${getStatusColor(campaign.status)}`}>
+                    <span className={`px-3 py-1 text-sm font-semibold rounded-full ${getStatusColor(campaign.status)} ml-4 flex-shrink-0`}>
                       {campaign.status}
                     </span>
                   </div>
@@ -509,11 +518,15 @@ const CampaignsPage: React.FC = () => {
                     </label>
                     <textarea
                       rows={3}
+                      maxLength={500}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors resize-none"
                       placeholder="Enter campaign description (optional)"
                       value={form.description}
                       onChange={(e) => setForm({ ...form, description: e.target.value })}
                     />
+                    <p className="mt-1 text-xs text-gray-500">
+                      {form.description.length}/500 characters
+                    </p>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Target Tags</label>
@@ -576,7 +589,7 @@ const CampaignsPage: React.FC = () => {
                           onChange={(e) => setForm({ ...form, startTimeOnly: e.target.value })}
                           step={60}
                         />
-                        <p className="mt-1 text-xs text-gray-500">Defaults to 9:00 AM if not specified</p>
+                        <p className="mt-1 text-xs text-gray-500">Defaults to 9:00 AM if not specified. Campaigns must be manually launched.</p>
                       </div>
                     </div>
                     <div className="space-y-4">
@@ -598,7 +611,7 @@ const CampaignsPage: React.FC = () => {
                           onChange={(e) => setForm({ ...form, endTimeOnly: e.target.value })}
                           step={60}
                         />
-                        <p className="mt-1 text-xs text-gray-500">Defaults to 6:00 PM if not specified</p>
+                        <p className="mt-1 text-xs text-gray-500">Defaults to 6:00 PM if not specified. Campaigns will stop automatically at this time.</p>
                       </div>
                     </div>
                   </div>
