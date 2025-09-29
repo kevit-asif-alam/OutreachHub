@@ -104,10 +104,6 @@ const CampaignsPage: React.FC = () => {
 
   // Helper: convert datetime-local value to ISO reliably
   const localDateTimeToISO = (value: string) => {
-    // Accept:
-    // - YYYY-MM-DDTHH:MM
-    // - YYYY-MM-DDTHH:MM:SS
-    // - YYYY-MM-DDTHH:MM:SS.sss
     const m = value.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2})(?:\.(\d{1,3}))?)?$/);
     if (m) {
       const [_, y, mo, d, h, mi, ss, ms] = m;

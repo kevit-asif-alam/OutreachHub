@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import Layout from '../../components/layout/Layout';
-import { UserIcon, EnvelopeIcon, BuildingOfficeIcon, CalendarIcon } from '@heroicons/react/24/outline';
+import { UserIcon, BuildingOfficeIcon, CalendarIcon } from '@heroicons/react/24/outline';
 
 const ProfilePage: React.FC = () => {
   const { user, currentWorkspace } = useAuth();

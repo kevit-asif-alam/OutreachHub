@@ -82,7 +82,7 @@ const Layout: React.FC<LayoutProps> = ({ children, title, isAdmin = false }) => 
   };
 
   const navigation = isAdmin ? [
-    { name: 'Dashboard', href: '/admin', current: location.pathname === '/admin' },
+    // { name: 'Dashboard', href: '/admin', current: location.pathname === '/admin' },
     { name: 'Workspaces', href: '/admin/workspaces', current: location.pathname.startsWith('/admin/workspaces') },
   ] : [
     { name: 'Dashboard', href: '/dashboard', current: location.pathname === '/dashboard' },
