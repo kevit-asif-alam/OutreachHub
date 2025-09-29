@@ -1,7 +1,11 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { ArrowRightIcon, BellIcon, UserIcon } from "@heroicons/react/24/outline";
+import {
+  ArrowRightIcon,
+  Bars3Icon,
+  UserIcon,
+} from "@heroicons/react/24/outline";
 
 interface HeaderProps {
   title: string;
@@ -96,15 +100,15 @@ const Header: React.FC<HeaderProps> = ({
     <header className="bg-purple-100 border-b border-black-200 sticky top-0 z-40">
       <div className="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
         {/* Left side */}
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-2">
           {showSidebarToggle && onSidebarToggle && (
             <button
               onClick={onSidebarToggle}
-              className="p-2 rounded-lg hover:bg-purple-200 transition-colors lg:hidden"
+              className="p-2 rounded-lg hover:bg-purple-200 transition-colors"
               title="Toggle sidebar"
             >
-              <svg
-                className="h-6 w-6 text-gray-600 p-10"
+              {/* <svg
+                className="h-6 w-6 text-gray-600"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -115,7 +119,8 @@ const Header: React.FC<HeaderProps> = ({
                   strokeWidth={2}
                   d="M4 6h16M4 12h16M4 18h16"
                 />
-              </svg>
+              </svg> */}
+              <Bars3Icon className="h-6 w-6" />
             </button>
           )}
 
@@ -132,7 +137,6 @@ const Header: React.FC<HeaderProps> = ({
 
         {/* Right side */}
         <div className="flex items-center space-x-4">
-
           {/* Profile Menu */}
           <ProfileMenu
             userEmail={user?.email || ""}

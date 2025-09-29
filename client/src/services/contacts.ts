@@ -48,7 +48,7 @@ export interface ContactStats {
 }
 
 export const contactsService = {
-  getAll: async (page = 1, limit = 10, search?: string): Promise<ContactsResponse> => {
+  getAll: async (page = 1, limit = 5, search?: string): Promise<ContactsResponse> => {
     const params = new URLSearchParams({
       page: page.toString(),
       limit: limit.toString(),

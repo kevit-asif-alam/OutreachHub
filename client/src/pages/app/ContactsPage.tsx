@@ -34,7 +34,7 @@ const ContactsPage: React.FC = () => {
 
   const { data: contactsData, isLoading, error } = useQuery({
     queryKey: ['contacts', page, searchTerm],
-    queryFn: () => contactsService.getAll(page, 10, searchTerm),
+    queryFn: () => contactsService.getAll(page, 5, searchTerm),
   });
 
   // Enhanced validation
@@ -365,7 +365,7 @@ const ContactsPage: React.FC = () => {
               <div className="px-6 py-4 border-t border-gray-200">
                 <div className="flex flex-col sm:flex-row items-center justify-between space-y-3 sm:space-y-0">
                   <div className="text-sm text-gray-700">
-                    Showing {((page - 1) * 10) + 1} to {Math.min(page * 10, contactsData.pagination.total)} of {contactsData.pagination.total} results
+                    Showing {((page - 1) * 5) + 1} to {Math.min(page * 5, contactsData.pagination.total)} of {contactsData.pagination.total} results
                   </div>
                   <div className="flex items-center space-x-2">
                     <button
